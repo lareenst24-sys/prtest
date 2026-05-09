@@ -1,28 +1,31 @@
-const videoCards = document.querySelectorAll(".video-card");
+const videoGrid = document.getElementById("videoGrid");
 
-videoCards.forEach((card) => {
-  const videoId = card.dataset.videoId;
-  const viewsText = card.querySelector(".views");
-  const iframe = card.querySelector("iframe");
+const savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
 
-  let savedViews = localStorage.getItem(`views-${videoId}`);
+if (savedVideos.length === 0) {
+  videoGrid.innerHTML = `<p class="empty-message">No videos added yet. Add videos from the admin page.</p>`;
+} else {
+  savedVideos.forEach((video) => {
+    const card = document.createElement("div");
+    card.className = "video-card";
+    card.dataset.videoId = video.id;
 
-  if (!savedViews) {
-    savedViews = 0;
-    localStorage.setItem(`views-${videoId}`, savedViews);
-  }
+    const savedViews = localStorage.getItem(`views-${video.id}`) || 0;
 
-  viewsText.textContent = `${savedViews} views`;
+    card.innerHTML = `
+      <div class="embed-box preview-box">
+        <div class="play-preview">▶</div>
+      </div>
 
-  iframe.addEventListener("mouseenter", () => {
-    if (card.dataset.counted === "true") return;
+      <h3>${video.title}</h3>
+      <p>${video.creator}</p>
+      <p class="views">${savedViews} views</p>
+    `;
 
-    let currentViews = Number(localStorage.getItem(`views-${videoId}`)) || 0;
-    currentViews++;
+    card.addEventListener("click", () => {
+      window.location.href = `watch.html?id=${video.id}`;
+    });
 
-    localStorage.setItem(`views-${videoId}`, currentViews);
-    viewsText.textContent = `${currentViews} views`;
-
-    card.dataset.counted = "true";
+    videoGrid.appendChild(card);
   });
-});
+}
