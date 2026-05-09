@@ -1,6 +1,7 @@
 const titleInput = document.getElementById("titleInput");
 const creatorInput = document.getElementById("creatorInput");
 const embedInput = document.getElementById("embedInput");
+const thumbnailInput = document.getElementById("thumbnailInput");
 const addVideoBtn = document.getElementById("addVideoBtn");
 
 const bulkInput = document.getElementById("bulkInput");
@@ -17,15 +18,28 @@ addVideoBtn.addEventListener("click", () => {
   const creator = creatorInput.value.trim();
   const rawEmbed = embedInput.value.trim();
 
-  const embed = cleanEmbedInput(rawEmbed);
+  let thumbnail = thumbnailInput.value.trim();
+
+  const extracted = extractVideoData(rawEmbed);
+  const embed = extracted.embed;
+
+  // If thumbnail field is empty, try to use thumbnail from embed code
+  if (!thumbnail && extracted.thumbnail) {
+    thumbnail = extracted.thumbnail;
+  }
 
   if (!title || !creator || !rawEmbed) {
-    alert("Please fill all fields.");
+    alert("Please fill title, category/creator, and embed link/code.");
     return;
   }
 
-  if (!isValidEmbedLink(embed)) {
+  if (!isValidLink(embed)) {
     alert("Please paste a valid video embed link or full iframe embed code.");
+    return;
+  }
+
+  if (thumbnail && !isValidLink(thumbnail)) {
+    alert("Please paste a valid thumbnail image link starting with http:// or https://");
     return;
   }
 
@@ -35,7 +49,8 @@ addVideoBtn.addEventListener("click", () => {
     id: `video-${Date.now()}`,
     title,
     creator,
-    embed
+    embed,
+    thumbnail
   };
 
   videos.unshift(newVideo);
@@ -44,6 +59,7 @@ addVideoBtn.addEventListener("click", () => {
   titleInput.value = "";
   creatorInput.value = "";
   embedInput.value = "";
+  thumbnailInput.value = "";
 
   renderVideoList();
 
@@ -77,11 +93,24 @@ bulkAddBtn.addEventListener("click", () => {
 
     const title = parts[0];
     const creator = parts[1];
-    const rawEmbed = parts.slice(2).join("|").trim();
+    const rawEmbed = parts[2];
 
-    const embed = cleanEmbedInput(rawEmbed);
+    let thumbnail = parts[3] || "";
 
-    if (!title || !creator || !isValidEmbedLink(embed)) {
+    const extracted = extractVideoData(rawEmbed);
+    const embed = extracted.embed;
+
+    // If bulk thumbnail column is empty, try to use thumbnail from embed code
+    if (!thumbnail && extracted.thumbnail) {
+      thumbnail = extracted.thumbnail;
+    }
+
+    if (!title || !creator || !isValidLink(embed)) {
+      skippedLines.push(index + 1);
+      return;
+    }
+
+    if (thumbnail && !isValidLink(thumbnail)) {
       skippedLines.push(index + 1);
       return;
     }
@@ -90,12 +119,13 @@ bulkAddBtn.addEventListener("click", () => {
       id: `video-${Date.now()}-${index}`,
       title,
       creator,
-      embed
+      embed,
+      thumbnail
     });
   });
 
   if (newVideos.length === 0) {
-    alert("No valid videos found. Check the format: Title | Category | Embed Link");
+    alert("No valid videos found. Use: Title | Category | Embed Link/Iframe Code | Thumbnail Link");
     return;
   }
 
@@ -131,22 +161,58 @@ clearAllBtn.addEventListener("click", () => {
   alert("All videos deleted.");
 });
 
-function cleanEmbedInput(input) {
+function extractVideoData(input) {
   const trimmed = input.trim();
 
-  // If user pasted full iframe code, extract only the src link
+  let embed = "";
+  let thumbnail = "";
+
+  // 1. If user pasted full iframe code, extract iframe src
   if (trimmed.toLowerCase().includes("<iframe")) {
-    const match = trimmed.match(/src=["']([^"']+)["']/i);
+    const iframeSrc = trimmed.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
-    if (match && match[1]) {
-      return match[1].trim();
+    if (iframeSrc && iframeSrc[1]) {
+      embed = iframeSrc[1].trim();
     }
-
-    return "";
+  } else {
+    // 2. If user pasted only the embed link
+    embed = trimmed;
   }
 
-  // If user pasted only the embed link, use it directly
-  return trimmed;
+  // Try to extract thumbnail from data-thumbnail=""
+  const dataThumb = trimmed.match(/data-thumbnail=["']([^"']+)["']/i);
+  if (dataThumb && dataThumb[1]) {
+    thumbnail = dataThumb[1].trim();
+  }
+
+  // Try to extract thumbnail from poster=""
+  const posterThumb = trimmed.match(/poster=["']([^"']+)["']/i);
+  if (!thumbnail && posterThumb && posterThumb[1]) {
+    thumbnail = posterThumb[1].trim();
+  }
+
+  // Try to extract thumbnail from img src=""
+  const imgThumb = trimmed.match(/<img[^>]*src=["']([^"']+)["']/i);
+  if (!thumbnail && imgThumb && imgThumb[1]) {
+    thumbnail = imgThumb[1].trim();
+  }
+
+  // Try to extract thumbnail from thumbnail=""
+  const thumbAttr = trimmed.match(/thumbnail=["']([^"']+)["']/i);
+  if (!thumbnail && thumbAttr && thumbAttr[1]) {
+    thumbnail = thumbAttr[1].trim();
+  }
+
+  // Try to extract thumbnail from image=""
+  const imageAttr = trimmed.match(/image=["']([^"']+)["']/i);
+  if (!thumbnail && imageAttr && imageAttr[1]) {
+    thumbnail = imageAttr[1].trim();
+  }
+
+  return {
+    embed,
+    thumbnail
+  };
 }
 
 function getVideos() {
@@ -157,7 +223,7 @@ function saveVideos(videos) {
   localStorage.setItem("videos", JSON.stringify(videos));
 }
 
-function isValidEmbedLink(link) {
+function isValidLink(link) {
   return link.startsWith("http://") || link.startsWith("https://");
 }
 
@@ -180,7 +246,8 @@ function renderVideoList() {
     item.innerHTML = `
       <strong>${escapeHTML(video.title)}</strong>
       <p>${escapeHTML(video.creator)}</p>
-      <p class="admin-help">${escapeHTML(video.embed)}</p>
+      <p class="admin-help">Embed: ${escapeHTML(video.embed)}</p>
+      <p class="admin-help">Thumbnail: ${video.thumbnail ? escapeHTML(video.thumbnail) : "No thumbnail added"}</p>
       <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
     `;
 
@@ -208,6 +275,6 @@ function deleteVideo(id) {
 
 function escapeHTML(text) {
   const div = document.createElement("div");
-  div.textContent = text;
+  div.textContent = text || "";
   return div.innerHTML;
 }
