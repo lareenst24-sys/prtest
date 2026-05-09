@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - StreamBox</title>
+  <title>Upload - StreamBox</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <header class="navbar">
-    <div class="logo">StreamBox Admin</div>
+    <div class="logo">StreamBox Upload</div>
 
     <nav>
       <a href="index.html">View Site</a>
@@ -18,18 +18,8 @@
 
   <main class="admin-page">
 
-    <div id="loginBox" class="admin-box">
-      <h2>Admin Login</h2>
-
-      <input type="password" id="passwordInput" placeholder="Enter admin password" />
-
-      <button id="loginBtn">Login</button>
-
-      <p id="loginError"></p>
-    </div>
-
-    <div id="adminPanel" class="admin-box hidden">
-      <h2>Add New Video</h2>
+    <div id="adminPanel" class="admin-box">
+      <h2>Add One Video</h2>
 
       <input type="text" id="titleInput" placeholder="Video title" />
 
@@ -37,9 +27,32 @@
 
       <textarea id="embedInput" placeholder="Paste video embed link here. Example: https://example.com/embed/video123"></textarea>
 
-      <button id="addVideoBtn">Add Video</button>
+      <button id="addVideoBtn">Add One Video</button>
+
+      <hr class="admin-divider">
+
+      <h2>Bulk Add Videos</h2>
+
+      <p class="admin-help">
+        Paste many videos at once. Use this format:
+        <br>
+        Title | Category | Embed Link
+      </p>
+
+      <textarea 
+        id="bulkInput" 
+        placeholder="Funny Cat Video | Animals | https://example.com/embed/123&#10;Cool Edit | Edits | https://example.com/embed/456&#10;Music Video | Music | https://example.com/embed/789">
+      </textarea>
+
+      <button id="bulkAddBtn">Bulk Add Videos</button>
+
+      <hr class="admin-divider">
 
       <h2>Saved Videos</h2>
+
+      <p id="videoCountText" class="admin-help">0 videos saved</p>
+
+      <button id="clearAllBtn" class="delete-btn">Delete All Videos</button>
 
       <div id="videoList"></div>
     </div>
