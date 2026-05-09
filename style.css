@@ -41,27 +41,6 @@ nav a:hover {
   opacity: 1;
 }
 
-.hero {
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  padding: 60px 6%;
-  background: linear-gradient(to bottom, #111, #050505);
-}
-
-.hero h1 {
-  font-size: 52px;
-  max-width: 700px;
-  margin-bottom: 18px;
-}
-
-.hero p {
-  font-size: 18px;
-  max-width: 560px;
-  color: #cfcfcf;
-  margin-bottom: 28px;
-}
-
 .content {
   padding: 50px 6%;
 }
@@ -133,20 +112,6 @@ footer {
   nav a {
     margin: 0 8px;
   }
-
-  .hero {
-    min-height: 45vh;
-    padding: 45px 6%;
-  }
-
-  .hero h1 {
-    font-size: 36px;
-  }
-
-  .hero p {
-    font-size: 16px;
-  }
-}
 .views {
   color: #777;
   font-size: 13px;
