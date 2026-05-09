@@ -62,21 +62,6 @@ nav a:hover {
   margin-bottom: 28px;
 }
 
-button {
-  background: #ffffff;
-  color: #000000;
-  border: none;
-  padding: 14px 24px;
-  border-radius: 999px;
-  font-size: 15px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-button:hover {
-  background: #dcdcdc;
-}
-
 .content {
   padding: 50px 6%;
 }
