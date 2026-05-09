@@ -15,15 +15,17 @@ renderVideoList();
 addVideoBtn.addEventListener("click", () => {
   const title = titleInput.value.trim();
   const creator = creatorInput.value.trim();
-  const embed = embedInput.value.trim();
+  const rawEmbed = embedInput.value.trim();
 
-  if (!title || !creator || !embed) {
+  const embed = cleanEmbedInput(rawEmbed);
+
+  if (!title || !creator || !rawEmbed) {
     alert("Please fill all fields.");
     return;
   }
 
   if (!isValidEmbedLink(embed)) {
-    alert("Please paste a valid video embed link starting with http:// or https://");
+    alert("Please paste a valid video embed link or full iframe embed code.");
     return;
   }
 
@@ -75,7 +77,9 @@ bulkAddBtn.addEventListener("click", () => {
 
     const title = parts[0];
     const creator = parts[1];
-    const embed = parts.slice(2).join("|").trim();
+    const rawEmbed = parts.slice(2).join("|").trim();
+
+    const embed = cleanEmbedInput(rawEmbed);
 
     if (!title || !creator || !isValidEmbedLink(embed)) {
       skippedLines.push(index + 1);
@@ -127,6 +131,24 @@ clearAllBtn.addEventListener("click", () => {
   alert("All videos deleted.");
 });
 
+function cleanEmbedInput(input) {
+  const trimmed = input.trim();
+
+  // If user pasted full iframe code, extract only the src link
+  if (trimmed.toLowerCase().includes("<iframe")) {
+    const match = trimmed.match(/src=["']([^"']+)["']/i);
+
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+
+    return "";
+  }
+
+  // If user pasted only the embed link, use it directly
+  return trimmed;
+}
+
 function getVideos() {
   return JSON.parse(localStorage.getItem("videos")) || [];
 }
@@ -158,6 +180,7 @@ function renderVideoList() {
     item.innerHTML = `
       <strong>${escapeHTML(video.title)}</strong>
       <p>${escapeHTML(video.creator)}</p>
+      <p class="admin-help">${escapeHTML(video.embed)}</p>
       <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
     `;
 
