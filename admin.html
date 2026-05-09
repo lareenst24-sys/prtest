@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - StreamBox</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">StreamBox Admin</div>
+
+    <nav>
+      <a href="index.html">View Site</a>
+    </nav>
+  </header>
+
+  <main class="admin-page">
+
+    <div id="loginBox" class="admin-box">
+      <h2>Admin Login</h2>
+
+      <input type="password" id="passwordInput" placeholder="Enter admin password" />
+
+      <button id="loginBtn">Login</button>
+
+      <p id="loginError"></p>
+    </div>
+
+    <div id="adminPanel" class="admin-box hidden">
+      <h2>Add New Video</h2>
+
+      <input type="text" id="titleInput" placeholder="Video title" />
+
+      <input type="text" id="creatorInput" placeholder="Creator name or category" />
+
+      <textarea id="embedInput" placeholder="Paste video embed link here. Example: https://example.com/embed/video123"></textarea>
+
+      <button id="addVideoBtn">Add Video</button>
+
+      <h2>Saved Videos</h2>
+
+      <div id="videoList"></div>
+    </div>
+
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>
