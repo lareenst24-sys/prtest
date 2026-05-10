@@ -21,44 +21,83 @@
     <section class="admin-box">
       <div class="admin-header">
         <h1>Upload Videos</h1>
-        <p>Add embedded videos to your platform. You can paste an embed link or full iframe code.</p>
+        <p>Add up to 5 embedded videos at once. Paste an embed link or full iframe code.</p>
       </div>
 
       <div class="admin-section">
-        <h2>Add One Video</h2>
+        <h2>Add 5 Videos</h2>
 
-        <label>Video Title</label>
-        <input type="text" id="titleInput" placeholder="Example: Funny Cat Video" />
+        <!-- VIDEO 1 -->
+        <div class="multi-video-box">
+          <h3>Video 1</h3>
 
-        <label>Category / Creator</label>
-        <input type="text" id="creatorInput" placeholder="Example: Animals" />
+          <label>Video Title</label>
+          <input type="text" class="titleInput" placeholder="Example: Funny Video" />
 
-        <label>Embed Link or Full Iframe Code</label>
-        <textarea id="embedInput" placeholder='Paste embed link or iframe code here. Example: <iframe src="https://example.com/embed/123"></iframe>'></textarea>
+          <label>Embed Link or Full Iframe Code</label>
+          <textarea class="embedInput" placeholder='Paste embed link or iframe code here'></textarea>
 
-        <label>Thumbnail Link Optional</label>
-        <input type="text" id="thumbnailInput" placeholder="Optional. If empty, homepage will show the iframe preview." />
+          <label>Thumbnail Link Optional</label>
+          <input type="text" class="thumbnailInput" placeholder="Optional thumbnail image link" />
+        </div>
 
-        <button id="addVideoBtn">Add One Video</button>
-      </div>
+        <!-- VIDEO 2 -->
+        <div class="multi-video-box">
+          <h3>Video 2</h3>
 
-      <hr class="admin-divider">
+          <label>Video Title</label>
+          <input type="text" class="titleInput" placeholder="Example: Cool Edit" />
 
-      <div class="admin-section">
-        <h2>Bulk Add Videos</h2>
+          <label>Embed Link or Full Iframe Code</label>
+          <textarea class="embedInput" placeholder='Paste embed link or iframe code here'></textarea>
 
-        <p class="admin-help">
-          Paste many videos at once. Use this format:
-          <br>
-          <strong>Title | Category | Embed Link/Iframe Code | Thumbnail Link Optional</strong>
-        </p>
+          <label>Thumbnail Link Optional</label>
+          <input type="text" class="thumbnailInput" placeholder="Optional thumbnail image link" />
+        </div>
 
-        <textarea 
-          id="bulkInput" 
-          placeholder='Funny Cat Video | Animals | https://example.com/embed/123 | https://example.com/thumb.jpg&#10;Cool Edit | Edits | <iframe src="https://example.com/embed/456"></iframe> |'>
-        </textarea>
+        <!-- VIDEO 3 -->
+        <div class="multi-video-box">
+          <h3>Video 3</h3>
 
-        <button id="bulkAddBtn">Bulk Add Videos</button>
+          <label>Video Title</label>
+          <input type="text" class="titleInput" placeholder="Example: Music Video" />
+
+          <label>Embed Link or Full Iframe Code</label>
+          <textarea class="embedInput" placeholder='Paste embed link or iframe code here'></textarea>
+
+          <label>Thumbnail Link Optional</label>
+          <input type="text" class="thumbnailInput" placeholder="Optional thumbnail image link" />
+        </div>
+
+        <!-- VIDEO 4 -->
+        <div class="multi-video-box">
+          <h3>Video 4</h3>
+
+          <label>Video Title</label>
+          <input type="text" class="titleInput" placeholder="Example: Gaming Clip" />
+
+          <label>Embed Link or Full Iframe Code</label>
+          <textarea class="embedInput" placeholder='Paste embed link or iframe code here'></textarea>
+
+          <label>Thumbnail Link Optional</label>
+          <input type="text" class="thumbnailInput" placeholder="Optional thumbnail image link" />
+        </div>
+
+        <!-- VIDEO 5 -->
+        <div class="multi-video-box">
+          <h3>Video 5</h3>
+
+          <label>Video Title</label>
+          <input type="text" class="titleInput" placeholder="Example: Favorite Video" />
+
+          <label>Embed Link or Full Iframe Code</label>
+          <textarea class="embedInput" placeholder='Paste embed link or iframe code here'></textarea>
+
+          <label>Thumbnail Link Optional</label>
+          <input type="text" class="thumbnailInput" placeholder="Optional thumbnail image link" />
+        </div>
+
+        <button id="addVideosBtn">Add Videos</button>
       </div>
 
       <hr class="admin-divider">
