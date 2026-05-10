@@ -18,44 +18,64 @@
 
   <main class="admin-page">
 
-    <div id="adminPanel" class="admin-box">
-      <h2>Add One Video</h2>
+    <section class="admin-box">
+      <div class="admin-header">
+        <h1>Upload Videos</h1>
+        <p>Add embedded videos to your platform. You can paste an embed link or full iframe code.</p>
+      </div>
 
-      <input type="text" id="titleInput" placeholder="Video title" />
+      <div class="admin-section">
+        <h2>Add One Video</h2>
 
-      <input type="text" id="creatorInput" placeholder="Creator name or category" />
+        <label>Video Title</label>
+        <input type="text" id="titleInput" placeholder="Example: Funny Cat Video" />
 
-      <textarea id="embedInput" placeholder="Paste video embed link here. Example: https://example.com/embed/video123"></textarea>
+        <label>Category / Creator</label>
+        <input type="text" id="creatorInput" placeholder="Example: Animals" />
 
-      <button id="addVideoBtn">Add One Video</button>
+        <label>Embed Link or Full Iframe Code</label>
+        <textarea id="embedInput" placeholder='Paste embed link or iframe code here. Example: <iframe src="https://example.com/embed/123"></iframe>'></textarea>
 
-      <hr class="admin-divider">
+        <label>Thumbnail Link Optional</label>
+        <input type="text" id="thumbnailInput" placeholder="Optional. If empty, homepage will show the iframe preview." />
 
-      <h2>Bulk Add Videos</h2>
-
-      <p class="admin-help">
-        Paste many videos at once. Use this format:
-        <br>
-        Title | Category | Embed Link
-      </p>
-
-      <textarea 
-        id="bulkInput" 
-        placeholder="Funny Cat Video | Animals | https://example.com/embed/123&#10;Cool Edit | Edits | https://example.com/embed/456&#10;Music Video | Music | https://example.com/embed/789">
-      </textarea>
-
-      <button id="bulkAddBtn">Bulk Add Videos</button>
+        <button id="addVideoBtn">Add One Video</button>
+      </div>
 
       <hr class="admin-divider">
 
-      <h2>Saved Videos</h2>
+      <div class="admin-section">
+        <h2>Bulk Add Videos</h2>
 
-      <p id="videoCountText" class="admin-help">0 videos saved</p>
+        <p class="admin-help">
+          Paste many videos at once. Use this format:
+          <br>
+          <strong>Title | Category | Embed Link/Iframe Code | Thumbnail Link Optional</strong>
+        </p>
 
-      <button id="clearAllBtn" class="delete-btn">Delete All Videos</button>
+        <textarea 
+          id="bulkInput" 
+          placeholder='Funny Cat Video | Animals | https://example.com/embed/123 | https://example.com/thumb.jpg&#10;Cool Edit | Edits | <iframe src="https://example.com/embed/456"></iframe> |'>
+        </textarea>
 
-      <div id="videoList"></div>
-    </div>
+        <button id="bulkAddBtn">Bulk Add Videos</button>
+      </div>
+
+      <hr class="admin-divider">
+
+      <div class="admin-section">
+        <div class="saved-header">
+          <div>
+            <h2>Saved Videos</h2>
+            <p id="videoCountText" class="admin-help">0 videos saved</p>
+          </div>
+
+          <button id="clearAllBtn" class="delete-btn">Delete All</button>
+        </div>
+
+        <div id="videoList"></div>
+      </div>
+    </section>
 
   </main>
 
