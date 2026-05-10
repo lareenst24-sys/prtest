@@ -14,7 +14,7 @@ const clearAllBtn = document.getElementById("clearAllBtn");
 renderVideoList();
 
 addVideoBtn.addEventListener("click", () => {
-  const title = titleInput.value.trim();
+  const manualTitle = titleInput.value.trim();
   const creator = creatorInput.value.trim();
   const rawEmbed = embedInput.value.trim();
 
@@ -23,19 +23,20 @@ addVideoBtn.addEventListener("click", () => {
   const extracted = extractVideoData(rawEmbed);
   const embed = extracted.embed;
 
-  // If thumbnail field is empty, try to use thumbnail from embed code
-  if (!thumbnail && extracted.thumbnail) {
-    thumbnail = extracted.thumbnail;
-  }
+  const title = manualTitle || extracted.title || "Untitled Video";
 
-  if (!title || !creator || !rawEmbed) {
-    alert("Please fill title, category/creator, and embed link/code.");
+  if (!creator || !rawEmbed) {
+    alert("Please fill category/creator and embed link/code.");
     return;
   }
 
   if (!isValidLink(embed)) {
     alert("Please paste a valid video embed link or full iframe embed code.");
     return;
+  }
+
+  if (!thumbnail && extracted.thumbnail) {
+    thumbnail = extracted.thumbnail;
   }
 
   if (thumbnail && !isValidLink(thumbnail)) {
@@ -91,7 +92,7 @@ bulkAddBtn.addEventListener("click", () => {
       return;
     }
 
-    const title = parts[0];
+    const manualTitle = parts[0];
     const creator = parts[1];
     const rawEmbed = parts[2];
 
@@ -100,14 +101,15 @@ bulkAddBtn.addEventListener("click", () => {
     const extracted = extractVideoData(rawEmbed);
     const embed = extracted.embed;
 
-    // If bulk thumbnail column is empty, try to use thumbnail from embed code
-    if (!thumbnail && extracted.thumbnail) {
-      thumbnail = extracted.thumbnail;
-    }
+    const title = manualTitle || extracted.title || "Untitled Video";
 
-    if (!title || !creator || !isValidLink(embed)) {
+    if (!creator || !isValidLink(embed)) {
       skippedLines.push(index + 1);
       return;
+    }
+
+    if (!thumbnail && extracted.thumbnail) {
+      thumbnail = extracted.thumbnail;
     }
 
     if (thumbnail && !isValidLink(thumbnail)) {
@@ -166,8 +168,9 @@ function extractVideoData(input) {
 
   let embed = "";
   let thumbnail = "";
+  let title = "";
 
-  // 1. If user pasted full iframe code, extract iframe src
+  // Extract iframe src
   if (trimmed.toLowerCase().includes("<iframe")) {
     const iframeSrc = trimmed.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
@@ -175,35 +178,52 @@ function extractVideoData(input) {
       embed = iframeSrc[1].trim();
     }
   } else {
-    // 2. If user pasted only the embed link
     embed = trimmed;
   }
 
-  // Try to extract thumbnail from data-thumbnail=""
+  // Extract title=""
+  const titleAttr = trimmed.match(/title=["']([^"']+)["']/i);
+  if (titleAttr && titleAttr[1]) {
+    title = titleAttr[1].trim();
+  }
+
+  // Extract data-title=""
+  const dataTitle = trimmed.match(/data-title=["']([^"']+)["']/i);
+  if (!title && dataTitle && dataTitle[1]) {
+    title = dataTitle[1].trim();
+  }
+
+  // Extract aria-label=""
+  const ariaLabel = trimmed.match(/aria-label=["']([^"']+)["']/i);
+  if (!title && ariaLabel && ariaLabel[1]) {
+    title = ariaLabel[1].trim();
+  }
+
+  // Extract thumbnail from data-thumbnail=""
   const dataThumb = trimmed.match(/data-thumbnail=["']([^"']+)["']/i);
   if (dataThumb && dataThumb[1]) {
     thumbnail = dataThumb[1].trim();
   }
 
-  // Try to extract thumbnail from poster=""
+  // Extract thumbnail from poster=""
   const posterThumb = trimmed.match(/poster=["']([^"']+)["']/i);
   if (!thumbnail && posterThumb && posterThumb[1]) {
     thumbnail = posterThumb[1].trim();
   }
 
-  // Try to extract thumbnail from img src=""
+  // Extract thumbnail from img src=""
   const imgThumb = trimmed.match(/<img[^>]*src=["']([^"']+)["']/i);
   if (!thumbnail && imgThumb && imgThumb[1]) {
     thumbnail = imgThumb[1].trim();
   }
 
-  // Try to extract thumbnail from thumbnail=""
+  // Extract thumbnail from thumbnail=""
   const thumbAttr = trimmed.match(/thumbnail=["']([^"']+)["']/i);
   if (!thumbnail && thumbAttr && thumbAttr[1]) {
     thumbnail = thumbAttr[1].trim();
   }
 
-  // Try to extract thumbnail from image=""
+  // Extract thumbnail from image=""
   const imageAttr = trimmed.match(/image=["']([^"']+)["']/i);
   if (!thumbnail && imageAttr && imageAttr[1]) {
     thumbnail = imageAttr[1].trim();
@@ -211,7 +231,8 @@ function extractVideoData(input) {
 
   return {
     embed,
-    thumbnail
+    thumbnail,
+    title
   };
 }
 
