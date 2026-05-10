@@ -1,6 +1,4 @@
-const titleInputs = document.querySelectorAll(".titleInput");
 const embedInputs = document.querySelectorAll(".embedInput");
-const thumbnailInputs = document.querySelectorAll(".thumbnailInput");
 
 const addVideosBtn = document.getElementById("addVideosBtn");
 
@@ -15,59 +13,46 @@ addVideosBtn.addEventListener("click", () => {
   const newVideos = [];
   const skippedVideos = [];
 
-  for (let i = 0; i < 5; i++) {
-    const manualTitle = titleInputs[i].value.trim();
-    const rawEmbed = embedInputs[i].value.trim();
-    let thumbnail = thumbnailInputs[i].value.trim();
+  embedInputs.forEach((input, index) => {
+    const rawEmbed = input.value.trim();
 
-    // Skip fully empty boxes
-    if (!manualTitle && !rawEmbed && !thumbnail) {
-      continue;
+    if (!rawEmbed) {
+      return;
     }
 
     const extracted = extractVideoData(rawEmbed);
     const embed = extracted.embed;
-    const title = manualTitle || extracted.title || `Untitled Video ${i + 1}`;
+    const title = extracted.title || `Video ${videos.length + newVideos.length + 1}`;
+    const thumbnail = extracted.thumbnail || "";
 
-    if (!rawEmbed || !isValidLink(embed)) {
-      skippedVideos.push(i + 1);
-      continue;
-    }
-
-    if (!thumbnail && extracted.thumbnail) {
-      thumbnail = extracted.thumbnail;
-    }
-
-    if (thumbnail && !isValidLink(thumbnail)) {
-      skippedVideos.push(i + 1);
-      continue;
+    if (!isValidLink(embed)) {
+      skippedVideos.push(index + 1);
+      return;
     }
 
     newVideos.push({
-      id: `video-${Date.now()}-${i}`,
+      id: `video-${Date.now()}-${index}`,
       title,
       embed,
       thumbnail
     });
-  }
+  });
 
   if (newVideos.length === 0) {
-    alert("No valid videos found. Add at least one video with a valid embed link or iframe code.");
+    alert("No valid videos found. Paste at least one iframe code or embed link.");
     return;
   }
 
   saveVideos([...newVideos, ...videos]);
 
-  titleInputs.forEach(input => input.value = "");
   embedInputs.forEach(input => input.value = "");
-  thumbnailInputs.forEach(input => input.value = "");
 
   renderVideoList();
 
   let message = `${newVideos.length} video(s) added successfully.`;
 
   if (skippedVideos.length > 0) {
-    message += `\nSkipped video box(es): ${skippedVideos.join(", ")}`;
+    message += `\nSkipped input(s): ${skippedVideos.join(", ")}`;
   }
 
   alert(message);
@@ -195,7 +180,7 @@ function renderVideoList() {
     item.innerHTML = `
       <strong>${escapeHTML(video.title)}</strong>
       <p class="admin-help">Embed: ${escapeHTML(video.embed)}</p>
-      <p class="admin-help">Thumbnail: ${video.thumbnail ? escapeHTML(video.thumbnail) : "No thumbnail added"}</p>
+      <p class="admin-help">Thumbnail: ${video.thumbnail ? escapeHTML(video.thumbnail) : "No thumbnail found"}</p>
       <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
     `;
 
