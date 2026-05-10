@@ -14,7 +14,7 @@ body {
 
 .navbar {
   width: 100%;
-  padding: 20px 6%;
+  padding: 18px 6%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -46,7 +46,7 @@ nav a:hover {
 /* HOME PAGE */
 
 .content {
-  padding: 50px 6%;
+  padding: 38px 6%;
   min-height: 80vh;
 }
 
@@ -84,9 +84,42 @@ nav a:hover {
 }
 
 .preview-box {
+  position: relative;
+}
+
+.preview-box iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.iframe-click-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: 0.25s ease;
+}
+
+.video-card:hover .thumbnail-img {
+  transform: scale(1.05);
+}
+
+.thumbnail-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .play-preview {
@@ -100,12 +133,14 @@ nav a:hover {
   justify-content: center;
   font-size: 26px;
   padding-left: 4px;
+  z-index: 4;
 }
 
 .video-card h3 {
   font-size: 18px;
   margin: 14px 14px 6px;
   color: #ffffff;
+  line-height: 1.35;
 }
 
 .video-card p {
@@ -122,6 +157,28 @@ nav a:hover {
 
 .empty-message {
   color: #777777;
+}
+
+/* LOAD MORE */
+
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 34px;
+}
+
+.load-more-btn {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.load-more-btn:hover {
+  background: #dddddd;
 }
 
 /* WATCH PAGE */
@@ -172,20 +229,46 @@ nav a:hover {
 /* ADMIN PAGE */
 
 .admin-page {
-  padding: 50px 6%;
+  padding: 36px 6%;
   min-height: 80vh;
+  display: flex;
+  justify-content: center;
 }
 
 .admin-box {
-  max-width: 700px;
-  background: #111111;
-  border: 1px solid #222;
-  border-radius: 18px;
-  padding: 24px;
+  width: 100%;
+  max-width: 860px;
+  background: #101010;
+  border: 1px solid #242424;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
-.admin-box h2 {
-  margin-bottom: 18px;
+.admin-header {
+  margin-bottom: 28px;
+}
+
+.admin-header h1 {
+  font-size: 34px;
+  margin-bottom: 8px;
+}
+
+.admin-header p {
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.admin-section h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.admin-box label {
+  display: block;
+  color: #cccccc;
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 
 .admin-box input,
@@ -194,9 +277,9 @@ nav a:hover {
   background: #050505;
   color: #ffffff;
   border: 1px solid #333;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 14px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   font-size: 15px;
   outline: none;
 }
@@ -207,7 +290,7 @@ nav a:hover {
 }
 
 .admin-box textarea {
-  min-height: 140px;
+  min-height: 135px;
   resize: vertical;
 }
 
@@ -226,18 +309,38 @@ button:hover {
   background: #dddddd;
 }
 
-.hidden {
-  display: none;
+.admin-divider {
+  border: none;
+  border-top: 1px solid #2a2a2a;
+  margin: 28px 0;
 }
 
-#loginError {
-  color: #ff6b6b;
-  margin-top: 10px;
+.admin-help {
+  color: #999999;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.saved-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.delete-btn {
+  background: #ff4d4d;
+  color: #ffffff;
+}
+
+.delete-btn:hover {
+  background: #ff2f2f;
 }
 
 .admin-video-item {
-  border-top: 1px solid #222;
-  padding: 14px 0;
+  border-top: 1px solid #242424;
+  padding: 16px 0;
 }
 
 .admin-video-item strong {
@@ -248,15 +351,11 @@ button:hover {
 .admin-video-item p {
   color: #999999;
   margin-bottom: 10px;
+  word-break: break-all;
 }
 
-.delete-btn {
-  background: #ff4d4d;
-  color: #ffffff;
-}
-
-.delete-btn:hover {
-  background: #ff2f2f;
+.hidden {
+  display: none;
 }
 
 /* FOOTER */
@@ -281,7 +380,7 @@ footer {
   }
 
   .content {
-    padding: 35px 5%;
+    padding: 30px 5%;
   }
 
   .content h2 {
@@ -297,6 +396,19 @@ footer {
   }
 
   .admin-page {
-    padding: 35px 5%;
+    padding: 28px 5%;
+  }
+
+  .admin-box {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .admin-header h1 {
+    font-size: 28px;
+  }
+
+  .saved-header {
+    flex-direction: column;
   }
 }
