@@ -31,7 +31,7 @@ function loadVideos() {
 
     if (video.thumbnail) {
       previewHTML = `
-        <img src="${escapeAttribute(video.thumbnail)}" alt="${escapeAttribute(video.title)}" class="thumbnail-img">
+        <img src="${escapeAttribute(video.thumbnail)}" alt="${escapeAttribute(video.title || "Video")}" class="thumbnail-img">
         <div class="thumbnail-overlay"></div>
         <div class="play-preview">▶</div>
       `;
@@ -39,7 +39,7 @@ function loadVideos() {
       previewHTML = `
         <iframe 
           src="${escapeAttribute(video.embed)}" 
-          title="${escapeAttribute(video.title)}" 
+          title="${escapeAttribute(video.title || "Video")}" 
           frameborder="0" 
           loading="lazy"
           allowfullscreen>
@@ -50,12 +50,16 @@ function loadVideos() {
       `;
     }
 
+    const titleHTML = video.title
+      ? `<h3>${escapeHTML(video.title)}</h3>`
+      : "";
+
     card.innerHTML = `
       <div class="embed-box preview-box">
         ${previewHTML}
       </div>
 
-      <h3>${escapeHTML(video.title)}</h3>
+      ${titleHTML}
       <p class="views">${savedViews} views</p>
     `;
 
