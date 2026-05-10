@@ -56,7 +56,6 @@ function loadVideos() {
       </div>
 
       <h3>${escapeHTML(video.title)}</h3>
-      <p>${escapeHTML(video.creator)}</p>
       <p class="views">${savedViews} views</p>
     `;
 
