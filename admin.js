@@ -1,11 +1,8 @@
-const titleInput = document.getElementById("titleInput");
-const creatorInput = document.getElementById("creatorInput");
-const embedInput = document.getElementById("embedInput");
-const thumbnailInput = document.getElementById("thumbnailInput");
-const addVideoBtn = document.getElementById("addVideoBtn");
+const titleInputs = document.querySelectorAll(".titleInput");
+const embedInputs = document.querySelectorAll(".embedInput");
+const thumbnailInputs = document.querySelectorAll(".thumbnailInput");
 
-const bulkInput = document.getElementById("bulkInput");
-const bulkAddBtn = document.getElementById("bulkAddBtn");
+const addVideosBtn = document.getElementById("addVideosBtn");
 
 const videoList = document.getElementById("videoList");
 const videoCountText = document.getElementById("videoCountText");
@@ -13,99 +10,28 @@ const clearAllBtn = document.getElementById("clearAllBtn");
 
 renderVideoList();
 
-addVideoBtn.addEventListener("click", () => {
-  const manualTitle = titleInput.value.trim();
-  const creator = creatorInput.value.trim();
-  const rawEmbed = embedInput.value.trim();
-
-  let thumbnail = thumbnailInput.value.trim();
-
-  const extracted = extractVideoData(rawEmbed);
-  const embed = extracted.embed;
-
-  const title = manualTitle || extracted.title || "Untitled Video";
-
-  if (!creator || !rawEmbed) {
-    alert("Please fill category/creator and embed link/code.");
-    return;
-  }
-
-  if (!isValidLink(embed)) {
-    alert("Please paste a valid video embed link or full iframe embed code.");
-    return;
-  }
-
-  if (!thumbnail && extracted.thumbnail) {
-    thumbnail = extracted.thumbnail;
-  }
-
-  if (thumbnail && !isValidLink(thumbnail)) {
-    alert("Please paste a valid thumbnail image link starting with http:// or https://");
-    return;
-  }
-
-  const videos = getVideos();
-
-  const newVideo = {
-    id: `video-${Date.now()}`,
-    title,
-    creator,
-    embed,
-    thumbnail
-  };
-
-  videos.unshift(newVideo);
-  saveVideos(videos);
-
-  titleInput.value = "";
-  creatorInput.value = "";
-  embedInput.value = "";
-  thumbnailInput.value = "";
-
-  renderVideoList();
-
-  alert("Video added successfully.");
-});
-
-bulkAddBtn.addEventListener("click", () => {
-  const bulkText = bulkInput.value.trim();
-
-  if (!bulkText) {
-    alert("Paste your bulk video list first.");
-    return;
-  }
-
-  const lines = bulkText
-    .split("\n")
-    .map(line => line.trim())
-    .filter(line => line.length > 0);
-
+addVideosBtn.addEventListener("click", () => {
   const videos = getVideos();
   const newVideos = [];
-  const skippedLines = [];
+  const skippedVideos = [];
 
-  lines.forEach((line, index) => {
-    const parts = line.split("|").map(part => part.trim());
+  for (let i = 0; i < 5; i++) {
+    const manualTitle = titleInputs[i].value.trim();
+    const rawEmbed = embedInputs[i].value.trim();
+    let thumbnail = thumbnailInputs[i].value.trim();
 
-    if (parts.length < 3) {
-      skippedLines.push(index + 1);
-      return;
+    // Skip fully empty boxes
+    if (!manualTitle && !rawEmbed && !thumbnail) {
+      continue;
     }
-
-    const manualTitle = parts[0];
-    const creator = parts[1];
-    const rawEmbed = parts[2];
-
-    let thumbnail = parts[3] || "";
 
     const extracted = extractVideoData(rawEmbed);
     const embed = extracted.embed;
+    const title = manualTitle || extracted.title || `Untitled Video ${i + 1}`;
 
-    const title = manualTitle || extracted.title || "Untitled Video";
-
-    if (!creator || !isValidLink(embed)) {
-      skippedLines.push(index + 1);
-      return;
+    if (!rawEmbed || !isValidLink(embed)) {
+      skippedVideos.push(i + 1);
+      continue;
     }
 
     if (!thumbnail && extracted.thumbnail) {
@@ -113,33 +39,35 @@ bulkAddBtn.addEventListener("click", () => {
     }
 
     if (thumbnail && !isValidLink(thumbnail)) {
-      skippedLines.push(index + 1);
-      return;
+      skippedVideos.push(i + 1);
+      continue;
     }
 
     newVideos.push({
-      id: `video-${Date.now()}-${index}`,
+      id: `video-${Date.now()}-${i}`,
       title,
-      creator,
       embed,
       thumbnail
     });
-  });
+  }
 
   if (newVideos.length === 0) {
-    alert("No valid videos found. Use: Title | Category | Embed Link/Iframe Code | Thumbnail Link");
+    alert("No valid videos found. Add at least one video with a valid embed link or iframe code.");
     return;
   }
 
   saveVideos([...newVideos, ...videos]);
 
-  bulkInput.value = "";
+  titleInputs.forEach(input => input.value = "");
+  embedInputs.forEach(input => input.value = "");
+  thumbnailInputs.forEach(input => input.value = "");
+
   renderVideoList();
 
-  let message = `${newVideos.length} videos added successfully.`;
+  let message = `${newVideos.length} video(s) added successfully.`;
 
-  if (skippedLines.length > 0) {
-    message += `\nSkipped lines: ${skippedLines.join(", ")}`;
+  if (skippedVideos.length > 0) {
+    message += `\nSkipped video box(es): ${skippedVideos.join(", ")}`;
   }
 
   alert(message);
@@ -266,7 +194,6 @@ function renderVideoList() {
 
     item.innerHTML = `
       <strong>${escapeHTML(video.title)}</strong>
-      <p>${escapeHTML(video.creator)}</p>
       <p class="admin-help">Embed: ${escapeHTML(video.embed)}</p>
       <p class="admin-help">Thumbnail: ${video.thumbnail ? escapeHTML(video.thumbnail) : "No thumbnail added"}</p>
       <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
