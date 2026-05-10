@@ -412,3 +412,16 @@ footer {
     flex-direction: column;
   }
 }
+.multi-video-box {
+  background: #080808;
+  border: 1px solid #242424;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.multi-video-box h3 {
+  font-size: 18px;
+  margin-bottom: 14px;
+  color: #ffffff;
+}
