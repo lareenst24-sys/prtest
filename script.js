@@ -1,6 +1,17 @@
 const videoGrid = document.getElementById("videoGrid");
 
-const savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
+let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
+
+// Clean old fake titles already saved in localStorage
+savedVideos = savedVideos.map((video) => {
+  if (isFakeTitle(video.title)) {
+    video.title = "";
+  }
+
+  return video;
+});
+
+localStorage.setItem("videos", JSON.stringify(savedVideos));
 
 const isMobile = window.innerWidth <= 700;
 const videosPerLoad = isMobile ? 14 : 20;
@@ -31,7 +42,7 @@ function loadVideos() {
 
     if (video.thumbnail) {
       previewHTML = `
-        <img src="${escapeAttribute(video.thumbnail)}" alt="${escapeAttribute(video.title || "Video")}" class="thumbnail-img">
+        <img src="${escapeAttribute(video.thumbnail)}" alt="Video" class="thumbnail-img">
         <div class="thumbnail-overlay"></div>
         <div class="play-preview">▶</div>
       `;
@@ -39,7 +50,7 @@ function loadVideos() {
       previewHTML = `
         <iframe 
           src="${escapeAttribute(video.embed)}" 
-          title="${escapeAttribute(video.title || "Video")}" 
+          title="Video"
           frameborder="0" 
           loading="lazy"
           allowfullscreen>
@@ -50,8 +61,10 @@ function loadVideos() {
       `;
     }
 
-    const titleHTML = video.title
-      ? `<h3>${escapeHTML(video.title)}</h3>`
+    const cleanTitle = isFakeTitle(video.title) ? "" : video.title;
+
+    const titleHTML = cleanTitle
+      ? `<h3>${escapeHTML(cleanTitle)}</h3>`
       : "";
 
     card.innerHTML = `
@@ -92,6 +105,18 @@ function createLoadMoreButton() {
   loadMoreWrapper.appendChild(loadMoreBtn);
 
   document.querySelector(".content").appendChild(loadMoreWrapper);
+}
+
+function isFakeTitle(title) {
+  if (!title) return false;
+
+  const clean = String(title).trim().toLowerCase();
+
+  return (
+    clean === "untitled video" ||
+    clean.startsWith("untitled video ") ||
+    /^video\s*\d+$/i.test(clean)
+  );
 }
 
 function escapeHTML(text) {
