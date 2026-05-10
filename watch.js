@@ -21,13 +21,26 @@ if (!video) {
 
   watchContainer.innerHTML = `
     <div class="watch-player">
-      <iframe src="${video.embed}" title="${video.title}" frameborder="0" allowfullscreen></iframe>
+      <iframe src="${escapeAttribute(video.embed)}" title="${escapeAttribute(video.title)}" frameborder="0" allowfullscreen></iframe>
     </div>
 
     <div class="watch-info">
-      <h1>${video.title}</h1>
-      <p>${video.creator}</p>
+      <h1>${escapeHTML(video.title)}</h1>
       <p>${currentViews} views</p>
     </div>
   `;
+}
+
+function escapeHTML(text) {
+  const div = document.createElement("div");
+  div.textContent = text || "";
+  return div.innerHTML;
+}
+
+function escapeAttribute(text) {
+  return String(text || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
