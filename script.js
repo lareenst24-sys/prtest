@@ -2,11 +2,11 @@ const videoGrid = document.getElementById("videoGrid");
 
 let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
 
-// Clean old fake titles
 savedVideos = savedVideos.map((video) => {
   if (isFakeTitle(video.title)) {
     video.title = "";
   }
+
   return video;
 });
 
@@ -37,35 +37,26 @@ function loadVideos() {
 
     const cleanTitle = isFakeTitle(video.title) ? "" : video.title;
 
-    let previewHTML = "";
-
-    if (video.thumbnail) {
-      previewHTML = `
-        <div class="thumb-wrap">
-          <img src="${escapeAttribute(video.thumbnail)}" alt="${escapeAttribute(cleanTitle || "Video")}" class="thumbnail-img">
-          <div class="play-preview">▶</div>
-        </div>
-      `;
-    } else {
-      previewHTML = `
-        <div class="thumb-wrap no-thumb-wrap">
-          <div class="no-thumbnail">Video</div>
-          <div class="play-preview">▶</div>
-        </div>
-      `;
-    }
-
-    const titleHTML = cleanTitle
-      ? `<h3 class="video-title">${escapeHTML(cleanTitle)}</h3>`
-      : "";
-
     card.innerHTML = `
-      <div class="video-thumb">
-        ${previewHTML}
+      <div class="video-thumb iframe-preview-box">
+        <iframe
+          src="${escapeAttribute(video.embed)}"
+          title="${escapeAttribute(cleanTitle || "Video")}"
+          frameborder="0"
+          loading="lazy"
+          allowfullscreen>
+        </iframe>
+
+        <div class="iframe-click-cover">
+          <div class="play-preview">▶</div>
+        </div>
       </div>
-      <div class="video-meta">
-        ${titleHTML}
-      </div>
+
+      ${
+        cleanTitle
+          ? `<div class="video-meta"><h3 class="video-title">${escapeHTML(cleanTitle)}</h3></div>`
+          : ""
+      }
     `;
 
     card.addEventListener("click", () => {
