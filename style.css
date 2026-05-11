@@ -411,3 +411,47 @@ footer {
   line-height: 1.5;
   resize: vertical;
 }
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.selectable-video-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.video-select-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.video-select-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #ffffff;
+}
+
+.admin-video-info {
+  flex: 1;
+}
+
+.thumb-ok {
+  color: #5cff9d;
+}
+
+.thumb-missing {
+  color: #ff6868;
+}
+
+.small-delete-btn {
+  padding: 9px 15px;
+  margin-bottom: 0;
+}
