@@ -70,6 +70,7 @@ addVideosBtn.addEventListener("click", () => {
 
 clearAllBtn.addEventListener("click", () => {
   const confirmDelete = confirm("Are you sure you want to delete all saved videos?");
+
   if (!confirmDelete) return;
 
   localStorage.removeItem("videos");
@@ -81,7 +82,15 @@ clearAllBtn.addEventListener("click", () => {
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
-  // Best case: one full embed code per line
+  /*
+    Best format:
+    One full embed code per line.
+
+    Example:
+    <iframe src="https://example.com/embed/1" title="Video one"></iframe>
+    <iframe src="https://example.com/embed/2" title="Video two"></iframe>
+  */
+
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -91,24 +100,37 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  // If user pasted many iframes in one big block, extract each iframe
+  /*
+    If many iframes are pasted together in one big line/block,
+    this extracts each <iframe>...</iframe> separately.
+  */
+
   const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
     return iframeMatches;
   }
 
-  // If separated by blank gaps
-  const paragraphBlocks = trimmed
-    .split(/\n\s*\n/)
+  /*
+    If your embed code is large/multi-line, separate videos using:
+
+    ---VIDEO---
+
+    Example:
+    FULL EMBED CODE 1
+    ---VIDEO---
+    FULL EMBED CODE 2
+  */
+
+  const separatedBlocks = trimmed
+    .split("---VIDEO---")
     .map(block => block.trim())
     .filter(block => block.length > 0);
 
-  if (paragraphBlocks.length > 1) {
-    return paragraphBlocks;
+  if (separatedBlocks.length > 1) {
+    return separatedBlocks;
   }
 
-  // Single item
   return [trimmed];
 }
 
@@ -118,8 +140,15 @@ function extractVideoData(input) {
   let embedPart = trimmed;
   let manualThumbnail = "";
 
-  // Optional format:
-  // FULL EMBED CODE || THUMBNAIL LINK
+  /*
+    Optional manual thumbnail format:
+
+    FULL EMBED CODE || THUMBNAIL LINK
+
+    Example:
+    <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg
+  */
+
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||");
     embedPart = pieces[0].trim();
@@ -142,7 +171,7 @@ function extractVideoData(input) {
   // Try to parse full HTML
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
 
-  // Title sources
+  // Try to extract title from common HTML places
   const titleSelectors = [
     "[title]",
     "[data-title]",
@@ -186,6 +215,7 @@ function extractVideoData(input) {
 
     for (const pattern of titlePatterns) {
       const match = embedPart.match(pattern);
+
       if (match && cleanTitle(match[1])) {
         title = cleanTitle(match[1]);
         break;
@@ -193,7 +223,7 @@ function extractVideoData(input) {
     }
   }
 
-  // Thumbnail sources from parsed HTML
+  // Try to extract thumbnail from common HTML places
   const imageSelectors = [
     "img[src]",
     "img[data-src]",
@@ -240,6 +270,7 @@ function extractVideoData(input) {
 
     for (const pattern of thumbPatterns) {
       const match = embedPart.match(pattern);
+
       if (match && match[1] && isValidLink(match[1])) {
         thumbnail = match[1].trim();
         break;
@@ -250,6 +281,7 @@ function extractVideoData(input) {
   // Last fallback: first image-looking URL
   if (!thumbnail) {
     const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
+
     if (imageUrl && imageUrl[0]) {
       thumbnail = imageUrl[0].trim();
     }
@@ -279,6 +311,7 @@ function cleanTitle(title) {
 
   const lower = clean.toLowerCase();
 
+  // Remove fake/default titles
   if (
     lower === "untitled video" ||
     lower.startsWith("untitled video ") ||
@@ -287,8 +320,12 @@ function cleanTitle(title) {
     return "";
   }
 
-  if (isValidLink(clean)) return "";
+  // Remove links as titles
+  if (isValidLink(clean)) {
+    return "";
+  }
 
+  // Remove iframe/code as title
   if (
     clean.includes("<iframe") ||
     clean.includes("</iframe>") ||
