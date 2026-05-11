@@ -2,13 +2,15 @@ const videoGrid = document.getElementById("videoGrid");
 
 let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
 
+// Clean saved videos before rendering
 savedVideos = savedVideos.map((video) => {
-  if (isFakeTitle(video.title)) {
-    video.title = "";
-  }
-
-  return video;
-});
+  return {
+    ...video,
+    title: cleanTitle(video.title),
+    thumbnail: isValidLink(video.thumbnail) ? video.thumbnail : "",
+    embed: isValidLink(video.embed) ? video.embed : ""
+  };
+}).filter((video) => video.embed);
 
 localStorage.setItem("videos", JSON.stringify(savedVideos));
 
@@ -35,28 +37,36 @@ function loadVideos() {
     card.className = "video-card";
     card.dataset.videoId = video.id;
 
-    const cleanTitle = isFakeTitle(video.title) ? "" : video.title;
+    const cleanVideoTitle = cleanTitle(video.title);
+
+    const thumbnailHTML = video.thumbnail
+      ? `
+        <img 
+          src="${escapeAttribute(video.thumbnail)}" 
+          alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
+          class="thumbnail-img"
+          loading="lazy"
+        >
+      `
+      : `
+        <div class="no-thumbnail"></div>
+      `;
+
+    const titleHTML = cleanVideoTitle
+      ? `
+        <div class="video-meta">
+          <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
+        </div>
+      `
+      : "";
 
     card.innerHTML = `
-      <div class="video-thumb iframe-preview-box">
-        <iframe
-          src="${escapeAttribute(video.embed)}"
-          title="${escapeAttribute(cleanTitle || "Video")}"
-          frameborder="0"
-          loading="lazy"
-          allowfullscreen>
-        </iframe>
-
-        <div class="iframe-click-cover">
-          <div class="play-preview">▶</div>
-        </div>
+      <div class="video-thumb">
+        ${thumbnailHTML}
+        <div class="play-preview">▶</div>
       </div>
 
-      ${
-        cleanTitle
-          ? `<div class="video-meta"><h3 class="video-title">${escapeHTML(cleanTitle)}</h3></div>`
-          : ""
-      }
+      ${titleHTML}
     `;
 
     card.addEventListener("click", () => {
@@ -86,18 +96,61 @@ function createLoadMoreButton() {
   });
 
   loadMoreWrapper.appendChild(loadMoreBtn);
-  document.querySelector(".content").appendChild(loadMoreWrapper);
+
+  const content = document.querySelector(".content");
+  content.appendChild(loadMoreWrapper);
 }
 
-function isFakeTitle(title) {
-  if (!title) return false;
+function cleanTitle(title) {
+  if (!title) return "";
 
-  const clean = String(title).trim().toLowerCase();
+  let clean = String(title).trim();
 
-  return (
-    clean === "untitled video" ||
-    clean.startsWith("untitled video ") ||
+  clean = clean
+    .replace(/\s+/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+
+  if (!clean) return "";
+
+  const lower = clean.toLowerCase();
+
+  // Remove fake/default titles
+  if (
+    lower === "untitled video" ||
+    lower.startsWith("untitled video ") ||
     /^video\s*\d+$/i.test(clean)
+  ) {
+    return "";
+  }
+
+  // Remove links as titles
+  if (isValidLink(clean)) {
+    return "";
+  }
+
+  // Remove iframe/code as title
+  if (
+    clean.includes("<iframe") ||
+    clean.includes("</iframe>") ||
+    clean.includes("src=")
+  ) {
+    return "";
+  }
+
+  return clean;
+}
+
+function isValidLink(link) {
+  return (
+    typeof link === "string" &&
+    (
+      link.startsWith("http://") ||
+      link.startsWith("https://")
+    )
   );
 }
 
