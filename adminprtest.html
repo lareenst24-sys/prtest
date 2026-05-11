@@ -21,24 +21,31 @@
     <section class="admin-box">
       <div class="admin-header">
         <h1>Upload Videos</h1>
-        <p>Paste up to 5 iframe embed codes or embed links. The site will add them automatically.</p>
+        <p>Paste up to 100 iframe embed codes or embed links at once.</p>
       </div>
 
       <div class="admin-section">
-        <label>Iframe Code / Embed Link 1</label>
-        <input type="text" class="embedInput" placeholder='Paste iframe code or embed link here' />
+        <label>Bulk Iframe Codes / Embed Links</label>
 
-        <label>Iframe Code / Embed Link 2</label>
-        <input type="text" class="embedInput" placeholder='Paste iframe code or embed link here' />
+        <textarea 
+          id="bulkEmbedInput" 
+          class="big-upload-box"
+          placeholder='Paste your embed codes here.
 
-        <label>Iframe Code / Embed Link 3</label>
-        <input type="text" class="embedInput" placeholder='Paste iframe code or embed link here' />
+Best format:
+Paste 1 full iframe/embed code per line.
 
-        <label>Iframe Code / Embed Link 4</label>
-        <input type="text" class="embedInput" placeholder='Paste iframe code or embed link here' />
+Example:
+<iframe src="https://example.com/embed/123" title="Video title"></iframe>
+<iframe src="https://example.com/embed/456" title="Another video"></iframe>
 
-        <label>Iframe Code / Embed Link 5</label>
-        <input type="text" class="embedInput" placeholder='Paste iframe code or embed link here' />
+Optional thumbnail format:
+<iframe src="https://example.com/embed/123" title="Video title"></iframe> || https://example.com/thumb.jpg'>
+        </textarea>
+
+        <p class="admin-help">
+          Tip: paste one video embed code per line. Limit: 100 videos per upload.
+        </p>
 
         <button id="addVideosBtn">Add Videos</button>
       </div>
