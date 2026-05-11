@@ -130,6 +130,12 @@ clearAllBtn.addEventListener("click", () => {
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
+  /*
+    BEST:
+    one video per line:
+    <iframe ...></iframe> || thumb || 12:45
+  */
+
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -139,11 +145,20 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>/gi);
+  /*
+    If many iframes are pasted in one big line.
+  */
+
+  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(\s*\|\|[^\n\r]+)?/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
     return iframeMatches;
   }
+
+  /*
+    For big multi-line embed blocks, use:
+    ---VIDEO---
+  */
 
   const separatedBlocks = trimmed
     .split("---VIDEO---")
@@ -164,26 +179,33 @@ function extractVideoData(input) {
   let manualThumbnail = "";
   let manualDuration = "";
 
-  // Format:
-  // FULL EMBED CODE || THUMBNAIL LINK || DURATION
+  /*
+    Format:
+    FULL EMBED CODE || THUMBNAIL LINK || DURATION
+
+    Example:
+    <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg || 12:45
+  */
+
   if (trimmed.includes("||")) {
-    const pieces = trimmed.split("||");
-    embedPart = pieces[0].trim();
-    manualThumbnail = pieces[1] ? pieces[1].trim() : "";
-    manualDuration = pieces[2] ? pieces[2].trim() : "";
+    const pieces = trimmed.split("||").map(piece => piece.trim());
+
+    embedPart = pieces[0] || "";
+    manualThumbnail = pieces[1] || "";
+    manualDuration = pieces[2] || "";
   }
 
   let embed = "";
   let thumbnail = manualThumbnail;
   let title = "";
-  let duration = manualDuration;
+  let duration = cleanDuration(manualDuration);
 
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
   if (iframeSrc && iframeSrc[1]) {
-    embed = iframeSrc[1].trim();
+    embed = decodeText(iframeSrc[1].trim());
   } else if (isValidLink(embedPart)) {
-    embed = embedPart;
+    embed = decodeText(embedPart);
   }
 
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
@@ -264,7 +286,7 @@ function extractVideoData(input) {
       element.getAttribute("data-image");
 
     if (possibleThumb && isValidLink(possibleThumb)) {
-      thumbnail = possibleThumb.trim();
+      thumbnail = decodeText(possibleThumb.trim());
       break;
     }
   }
@@ -285,7 +307,7 @@ function extractVideoData(input) {
       const match = embedPart.match(pattern);
 
       if (match && match[1] && isValidLink(match[1])) {
-        thumbnail = match[1].trim();
+        thumbnail = decodeText(match[1].trim());
         break;
       }
     }
@@ -295,16 +317,22 @@ function extractVideoData(input) {
     const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
 
     if (imageUrl && imageUrl[0]) {
-      thumbnail = imageUrl[0].trim();
+      thumbnail = decodeText(imageUrl[0].trim());
     }
   }
+
+  /*
+    Duration extraction
+  */
 
   if (!duration) {
     const durationPatterns = [
       /duration=["']([^"']+)["']/i,
       /data-duration=["']([^"']+)["']/i,
       /length=["']([^"']+)["']/i,
-      /data-length=["']([^"']+)["']/i
+      /data-length=["']([^"']+)["']/i,
+      /time=["']([^"']+)["']/i,
+      /data-time=["']([^"']+)["']/i
     ];
 
     for (const pattern of durationPatterns) {
@@ -336,15 +364,9 @@ function extractVideoData(input) {
 function cleanTitle(title) {
   if (!title) return "";
 
-  let clean = String(title).trim();
+  let clean = decodeText(String(title).trim());
 
-  clean = clean
-    .replace(/\s+/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
+  clean = clean.replace(/\s+/g, " ");
 
   if (!clean) return "";
 
@@ -376,11 +398,23 @@ function cleanDuration(duration) {
 
   const clean = String(duration).trim();
 
+  // 1:23, 12:45, 1:02:33
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
     return clean;
   }
 
   return "";
+}
+
+function decodeText(text) {
+  if (!text) return "";
+
+  return String(text)
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
 }
 
 function getVideos() {
@@ -416,6 +450,7 @@ function renderVideoList() {
 
   if (currentFilter === "missing") {
     displayVideos = videos.filter(video => !video.thumbnail);
+
     if (filterStatusText) {
       filterStatusText.textContent = `Showing videos missing thumbnails: ${displayVideos.length}`;
     }
@@ -443,8 +478,8 @@ function renderVideoList() {
       : `<span class="thumb-missing">No thumbnail</span>`;
 
     const durationStatus = video.duration
-      ? `<span class="admin-help">Duration: ${escapeHTML(video.duration)}</span>`
-      : `<span class="admin-help">No duration</span>`;
+      ? `<span class="thumb-ok">Duration: ${escapeHTML(video.duration)}</span>`
+      : `<span class="thumb-missing">No duration</span>`;
 
     item.innerHTML = `
       <label class="video-select-row">
