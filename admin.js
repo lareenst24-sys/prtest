@@ -47,7 +47,8 @@ addVideosBtn.addEventListener("click", () => {
       id: `video-${Date.now()}-${index}`,
       title: cleanTitle(extracted.title),
       embed: extracted.embed,
-      thumbnail: extracted.thumbnail || ""
+      thumbnail: extracted.thumbnail || "",
+      duration: cleanDuration(extracted.duration)
     });
   });
 
@@ -129,11 +130,8 @@ clearAllBtn.addEventListener("click", () => {
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
-  /*
-    Best for big multi-line embed codes:
-    Separate each video with:
-    ---VIDEO---
-  */
+  // Best for big multi-line embed codes:
+  // Separate each video with ---VIDEO---
   const separatedBlocks = trimmed
     .split("---VIDEO---")
     .map(block => block.trim())
@@ -143,11 +141,9 @@ function splitEmbedBlocks(text) {
     return separatedBlocks;
   }
 
-  /*
-    Best normal way:
-    Paste one full embed code per line.
-    This keeps thumbnail/title data outside the iframe.
-  */
+  // Best normal way:
+  // paste one FULL embed code per line.
+  // This keeps thumbnail/title/duration data outside the iframe.
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -157,10 +153,7 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  /*
-    Last fallback:
-    If many iframes are pasted in one giant line.
-  */
+  // Last fallback only.
   const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
@@ -175,15 +168,22 @@ function extractVideoData(input) {
 
   let embedPart = trimmed;
   let manualThumbnail = "";
+  let manualDuration = "";
 
   /*
-    Supported:
+    Supported formats:
 
-    1. Full embed code only:
+    Full embed only:
     <iframe src="https://example.com/embed/123" title="Video"></iframe>
 
-    2. Full embed code + manual thumbnail:
+    Full embed + duration:
+    <iframe src="https://example.com/embed/123" title="Video"></iframe> || 12:45
+
+    Full embed + thumbnail:
     <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg
+
+    Full embed + thumbnail + duration:
+    <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg || 12:45
   */
 
   if (trimmed.includes("||")) {
@@ -191,14 +191,23 @@ function extractVideoData(input) {
 
     embedPart = pieces[0] || "";
 
-    if (pieces[1] && isValidLink(pieces[1])) {
-      manualThumbnail = pieces[1];
+    for (let i = 1; i < pieces.length; i++) {
+      const piece = pieces[i];
+
+      if (!piece) continue;
+
+      if (cleanDuration(piece)) {
+        manualDuration = piece;
+      } else if (isValidLink(piece)) {
+        manualThumbnail = piece;
+      }
     }
   }
 
   let embed = "";
   let thumbnail = manualThumbnail;
   let title = "";
+  let duration = cleanDuration(manualDuration);
 
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
@@ -210,6 +219,7 @@ function extractVideoData(input) {
 
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
 
+  // Title
   const titleSelectors = [
     "[title]",
     "[data-title]",
@@ -260,6 +270,7 @@ function extractVideoData(input) {
     }
   }
 
+  // Thumbnail
   const imageSelectors = [
     "img[src]",
     "img[data-src]",
@@ -321,10 +332,40 @@ function extractVideoData(input) {
     }
   }
 
+  // Duration
+  if (!duration) {
+    const durationPatterns = [
+      /duration=["']([^"']+)["']/i,
+      /data-duration=["']([^"']+)["']/i,
+      /length=["']([^"']+)["']/i,
+      /data-length=["']([^"']+)["']/i,
+      /time=["']([^"']+)["']/i,
+      /data-time=["']([^"']+)["']/i
+    ];
+
+    for (const pattern of durationPatterns) {
+      const match = embedPart.match(pattern);
+
+      if (match && cleanDuration(match[1])) {
+        duration = cleanDuration(match[1]);
+        break;
+      }
+    }
+  }
+
+  if (!duration) {
+    const durationText = embedPart.match(/\b\d{1,2}:\d{2}(?::\d{2})?\b/);
+
+    if (durationText && durationText[0]) {
+      duration = cleanDuration(durationText[0]);
+    }
+  }
+
   return {
     embed,
     thumbnail,
-    title
+    title,
+    duration
   };
 }
 
@@ -358,6 +399,19 @@ function cleanTitle(title) {
   }
 
   return clean;
+}
+
+function cleanDuration(duration) {
+  if (!duration) return "";
+
+  const clean = String(duration).trim();
+
+  // Accepts: 1:23, 12:45, 1:02:33
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
+    return clean;
+  }
+
+  return "";
 }
 
 function decodeText(text) {
@@ -398,6 +452,7 @@ function renderVideoList() {
 
   videos = videos.map((video) => {
     video.title = cleanTitle(video.title);
+    video.duration = cleanDuration(video.duration);
     return video;
   });
 
@@ -437,12 +492,17 @@ function renderVideoList() {
       ? `<span class="thumb-ok">Thumbnail found</span>`
       : `<span class="thumb-missing">No thumbnail</span>`;
 
+    const durationStatus = video.duration
+      ? `<span class="thumb-ok">Duration: ${escapeHTML(video.duration)}</span>`
+      : `<span class="thumb-missing">No duration</span>`;
+
     item.innerHTML = `
       <label class="video-select-row">
         <input type="checkbox" class="video-select-checkbox" value="${escapeHTML(video.id)}">
         <div class="admin-video-info">
           <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
           <p class="admin-help">${thumbStatus}</p>
+          <p class="admin-help">${durationStatus}</p>
         </div>
       </label>
 
