@@ -8,8 +8,7 @@ savedVideos = savedVideos.map((video) => {
     ...video,
     title: cleanTitle(video.title),
     thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
-    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
-    duration: cleanDuration(video.duration)
+    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : ""
   };
 }).filter((video) => video.embed);
 
@@ -38,15 +37,13 @@ function loadVideos() {
     card.className = "video-card";
     card.dataset.videoId = video.id;
 
-    const durationHTML = video.duration
-      ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
-      : "";
+    const cleanVideoTitle = cleanTitle(video.title);
 
     const thumbnailHTML = video.thumbnail
       ? `
         <img 
           src="${escapeAttribute(video.thumbnail)}" 
-          alt="Video thumbnail" 
+          alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
           class="thumbnail-img"
           loading="lazy"
           onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
@@ -54,11 +51,20 @@ function loadVideos() {
       `
       : "";
 
+    const titleHTML = cleanVideoTitle
+      ? `
+        <div class="video-meta">
+          <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
+        </div>
+      `
+      : "";
+
     card.innerHTML = `
       <div class="video-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
         ${thumbnailHTML}
-        ${durationHTML}
       </div>
+
+      ${titleHTML}
     `;
 
     card.addEventListener("click", () => {
@@ -131,19 +137,6 @@ function cleanTitle(title) {
   return clean;
 }
 
-function cleanDuration(duration) {
-  if (!duration) return "";
-
-  const clean = String(duration).trim();
-
-  // Allows 1:23, 12:45, 1:02:33
-  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
-    return clean;
-  }
-
-  return "";
-}
-
 function decodeUrl(url) {
   if (!url) return "";
 
@@ -158,7 +151,8 @@ function isValidLink(link) {
     typeof link === "string" &&
     (
       link.startsWith("http://") ||
-      link.startsWith("https://")
+      link.startsWith("https://") ||
+      link.startsWith("//")
     )
   );
 }
