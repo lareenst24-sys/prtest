@@ -478,3 +478,19 @@ footer {
   justify-content: center;
   font-size: 13px;
 }
+.play-preview {
+  display: none !important;
+}
+
+.duration-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 5;
+}
