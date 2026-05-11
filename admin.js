@@ -16,13 +16,11 @@ addVideosBtn.addEventListener("click", () => {
   embedInputs.forEach((input, index) => {
     const rawEmbed = input.value.trim();
 
-    if (!rawEmbed) {
-      return;
-    }
+    if (!rawEmbed) return;
 
     const extracted = extractVideoData(rawEmbed);
     const embed = extracted.embed;
-    const title = extracted.title || `Video ${videos.length + newVideos.length + 1}`;
+    const title = isFakeTitle(extracted.title) ? "" : (extracted.title || "");
     const thumbnail = extracted.thumbnail || "";
 
     if (!isValidLink(embed)) {
@@ -63,14 +61,7 @@ clearAllBtn.addEventListener("click", () => {
 
   if (!confirmDelete) return;
 
-  const videos = getVideos();
-
-  videos.forEach((video) => {
-    localStorage.removeItem(`views-${video.id}`);
-  });
-
   localStorage.removeItem("videos");
-
   renderVideoList();
 
   alert("All videos deleted.");
@@ -83,10 +74,8 @@ function extractVideoData(input) {
   let thumbnail = "";
   let title = "";
 
-  // Extract iframe src
   if (trimmed.toLowerCase().includes("<iframe")) {
     const iframeSrc = trimmed.match(/<iframe[^>]*src=["']([^"']+)["']/i);
-
     if (iframeSrc && iframeSrc[1]) {
       embed = iframeSrc[1].trim();
     }
@@ -94,49 +83,41 @@ function extractVideoData(input) {
     embed = trimmed;
   }
 
-  // Extract title=""
   const titleAttr = trimmed.match(/title=["']([^"']+)["']/i);
   if (titleAttr && titleAttr[1]) {
     title = titleAttr[1].trim();
   }
 
-  // Extract data-title=""
   const dataTitle = trimmed.match(/data-title=["']([^"']+)["']/i);
   if (!title && dataTitle && dataTitle[1]) {
     title = dataTitle[1].trim();
   }
 
-  // Extract aria-label=""
   const ariaLabel = trimmed.match(/aria-label=["']([^"']+)["']/i);
   if (!title && ariaLabel && ariaLabel[1]) {
     title = ariaLabel[1].trim();
   }
 
-  // Extract thumbnail from data-thumbnail=""
   const dataThumb = trimmed.match(/data-thumbnail=["']([^"']+)["']/i);
   if (dataThumb && dataThumb[1]) {
     thumbnail = dataThumb[1].trim();
   }
 
-  // Extract thumbnail from poster=""
   const posterThumb = trimmed.match(/poster=["']([^"']+)["']/i);
   if (!thumbnail && posterThumb && posterThumb[1]) {
     thumbnail = posterThumb[1].trim();
   }
 
-  // Extract thumbnail from img src=""
   const imgThumb = trimmed.match(/<img[^>]*src=["']([^"']+)["']/i);
   if (!thumbnail && imgThumb && imgThumb[1]) {
     thumbnail = imgThumb[1].trim();
   }
 
-  // Extract thumbnail from thumbnail=""
   const thumbAttr = trimmed.match(/thumbnail=["']([^"']+)["']/i);
   if (!thumbnail && thumbAttr && thumbAttr[1]) {
     thumbnail = thumbAttr[1].trim();
   }
 
-  // Extract thumbnail from image=""
   const imageAttr = trimmed.match(/image=["']([^"']+)["']/i);
   if (!thumbnail && imageAttr && imageAttr[1]) {
     thumbnail = imageAttr[1].trim();
@@ -161,8 +142,29 @@ function isValidLink(link) {
   return link.startsWith("http://") || link.startsWith("https://");
 }
 
+function isFakeTitle(title) {
+  if (!title) return false;
+
+  const clean = String(title).trim().toLowerCase();
+
+  return (
+    clean === "untitled video" ||
+    clean.startsWith("untitled video ") ||
+    /^video\s*\d+$/i.test(clean)
+  );
+}
+
 function renderVideoList() {
-  const videos = getVideos();
+  let videos = getVideos();
+
+  videos = videos.map((video) => {
+    if (isFakeTitle(video.title)) {
+      video.title = "";
+    }
+    return video;
+  });
+
+  saveVideos(videos);
 
   videoCountText.textContent = `${videos.length} videos saved`;
 
@@ -178,7 +180,7 @@ function renderVideoList() {
     item.className = "admin-video-item";
 
     item.innerHTML = `
-      <strong>${escapeHTML(video.title)}</strong>
+      <strong>${video.title ? escapeHTML(video.title) : "No title"}</strong>
       <p class="admin-help">Embed: ${escapeHTML(video.embed)}</p>
       <p class="admin-help">Thumbnail: ${video.thumbnail ? escapeHTML(video.thumbnail) : "No thumbnail found"}</p>
       <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
@@ -197,12 +199,8 @@ function renderVideoList() {
 
 function deleteVideo(id) {
   let videos = getVideos();
-
   videos = videos.filter((video) => video.id !== id);
-
   saveVideos(videos);
-  localStorage.removeItem(`views-${id}`);
-
   renderVideoList();
 }
 
