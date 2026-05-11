@@ -2,7 +2,6 @@ const videoGrid = document.getElementById("videoGrid");
 
 let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
 
-// Clean saved videos before rendering
 savedVideos = savedVideos.map((video) => {
   return {
     ...video,
@@ -136,7 +135,6 @@ function cleanDuration(duration) {
 
   const clean = String(duration).trim();
 
-  // Accepts: 1:23, 12:45, 1:02:33
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
     return clean;
   }
