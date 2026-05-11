@@ -2,12 +2,11 @@ const videoGrid = document.getElementById("videoGrid");
 
 let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
 
-// Clean old fake titles already saved in localStorage
+// Clean old fake titles
 savedVideos = savedVideos.map((video) => {
   if (isFakeTitle(video.title)) {
     video.title = "";
   }
-
   return video;
 });
 
@@ -36,44 +35,37 @@ function loadVideos() {
     card.className = "video-card";
     card.dataset.videoId = video.id;
 
-    const savedViews = localStorage.getItem(`views-${video.id}`) || 0;
+    const cleanTitle = isFakeTitle(video.title) ? "" : video.title;
 
     let previewHTML = "";
 
     if (video.thumbnail) {
       previewHTML = `
-        <img src="${escapeAttribute(video.thumbnail)}" alt="Video" class="thumbnail-img">
-        <div class="thumbnail-overlay"></div>
-        <div class="play-preview">▶</div>
+        <div class="thumb-wrap">
+          <img src="${escapeAttribute(video.thumbnail)}" alt="${escapeAttribute(cleanTitle || "Video")}" class="thumbnail-img">
+          <div class="play-preview">▶</div>
+        </div>
       `;
     } else {
       previewHTML = `
-        <iframe 
-          src="${escapeAttribute(video.embed)}" 
-          title="Video"
-          frameborder="0" 
-          loading="lazy"
-          allowfullscreen>
-        </iframe>
-        <div class="iframe-click-layer">
+        <div class="thumb-wrap no-thumb-wrap">
+          <div class="no-thumbnail">Video</div>
           <div class="play-preview">▶</div>
         </div>
       `;
     }
 
-    const cleanTitle = isFakeTitle(video.title) ? "" : video.title;
-
     const titleHTML = cleanTitle
-      ? `<h3>${escapeHTML(cleanTitle)}</h3>`
+      ? `<h3 class="video-title">${escapeHTML(cleanTitle)}</h3>`
       : "";
 
     card.innerHTML = `
-      <div class="embed-box preview-box">
+      <div class="video-thumb">
         ${previewHTML}
       </div>
-
-      ${titleHTML}
-      <p class="views">${savedViews} views</p>
+      <div class="video-meta">
+        ${titleHTML}
+      </div>
     `;
 
     card.addEventListener("click", () => {
@@ -103,7 +95,6 @@ function createLoadMoreButton() {
   });
 
   loadMoreWrapper.appendChild(loadMoreBtn);
-
   document.querySelector(".content").appendChild(loadMoreWrapper);
 }
 
