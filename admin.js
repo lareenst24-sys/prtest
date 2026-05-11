@@ -20,20 +20,16 @@ addVideosBtn.addEventListener("click", () => {
 
     const extracted = extractVideoData(rawInput);
 
-    const embed = extracted.embed;
-    const title = cleanTitle(extracted.title);
-    const thumbnail = extracted.thumbnail || "";
-
-    if (!isValidLink(embed)) {
+    if (!isValidLink(extracted.embed)) {
       skippedVideos.push(index + 1);
       return;
     }
 
     newVideos.push({
       id: `video-${Date.now()}-${index}`,
-      title,
-      embed,
-      thumbnail
+      title: cleanTitle(extracted.title),
+      embed: extracted.embed,
+      thumbnail: extracted.thumbnail || ""
     });
   });
 
@@ -59,11 +55,9 @@ addVideosBtn.addEventListener("click", () => {
 
 clearAllBtn.addEventListener("click", () => {
   const confirmDelete = confirm("Are you sure you want to delete all saved videos?");
-
   if (!confirmDelete) return;
 
   localStorage.removeItem("videos");
-
   renderVideoList();
 
   alert("All videos deleted.");
@@ -75,7 +69,7 @@ function extractVideoData(input) {
   let embedPart = trimmed;
   let manualThumbnail = "";
 
-  // Optional format:
+  // Optional manual format:
   // FULL EMBED CODE || THUMBNAIL LINK
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||");
@@ -87,79 +81,125 @@ function extractVideoData(input) {
   let thumbnail = manualThumbnail;
   let title = "";
 
-  // Extract iframe src from full code
+  // Extract iframe src
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
-
   if (iframeSrc && iframeSrc[1]) {
     embed = iframeSrc[1].trim();
   } else if (isValidLink(embedPart)) {
     embed = embedPart;
   }
 
-  // Extract title=""
-  const titleAttr = embedPart.match(/title=["']([^"']+)["']/i);
-  if (titleAttr && titleAttr[1]) {
-    title = titleAttr[1].trim();
+  // Try to parse full HTML
+  const doc = new DOMParser().parseFromString(embedPart, "text/html");
+
+  // Title sources
+  const titleSelectors = [
+    "[title]",
+    "[data-title]",
+    "[aria-label]",
+    "[alt]",
+    "h1",
+    "h2",
+    "h3",
+    ".title",
+    ".video-title",
+    "a"
+  ];
+
+  for (const selector of titleSelectors) {
+    const element = doc.querySelector(selector);
+    if (!element) continue;
+
+    const possibleTitle =
+      element.getAttribute("title") ||
+      element.getAttribute("data-title") ||
+      element.getAttribute("aria-label") ||
+      element.getAttribute("alt") ||
+      element.textContent;
+
+    const cleaned = cleanTitle(possibleTitle);
+
+    if (cleaned) {
+      title = cleaned;
+      break;
+    }
   }
 
-  // Extract data-title=""
-  const dataTitle = embedPart.match(/data-title=["']([^"']+)["']/i);
-  if (!title && dataTitle && dataTitle[1]) {
-    title = dataTitle[1].trim();
+  // Regex title fallback
+  if (!title) {
+    const titlePatterns = [
+      /title=["']([^"']+)["']/i,
+      /data-title=["']([^"']+)["']/i,
+      /aria-label=["']([^"']+)["']/i,
+      /alt=["']([^"']+)["']/i
+    ];
+
+    for (const pattern of titlePatterns) {
+      const match = embedPart.match(pattern);
+      if (match && cleanTitle(match[1])) {
+        title = cleanTitle(match[1]);
+        break;
+      }
+    }
   }
 
-  // Extract aria-label=""
-  const ariaLabel = embedPart.match(/aria-label=["']([^"']+)["']/i);
-  if (!title && ariaLabel && ariaLabel[1]) {
-    title = ariaLabel[1].trim();
+  // Thumbnail sources from parsed HTML
+  const imageSelectors = [
+    "img[src]",
+    "img[data-src]",
+    "[poster]",
+    "[data-poster]",
+    "[data-thumbnail]",
+    "[thumbnail]",
+    "[image]",
+    "[data-image]"
+  ];
+
+  for (const selector of imageSelectors) {
+    const element = doc.querySelector(selector);
+    if (!element) continue;
+
+    const possibleThumb =
+      element.getAttribute("src") ||
+      element.getAttribute("data-src") ||
+      element.getAttribute("poster") ||
+      element.getAttribute("data-poster") ||
+      element.getAttribute("data-thumbnail") ||
+      element.getAttribute("thumbnail") ||
+      element.getAttribute("image") ||
+      element.getAttribute("data-image");
+
+    if (possibleThumb && isValidLink(possibleThumb)) {
+      thumbnail = possibleThumb.trim();
+      break;
+    }
   }
 
-  // Extract thumbnail from data-thumbnail=""
-  const dataThumb = embedPart.match(/data-thumbnail=["']([^"']+)["']/i);
-  if (!thumbnail && dataThumb && dataThumb[1]) {
-    thumbnail = dataThumb[1].trim();
+  // Regex thumbnail fallback
+  if (!thumbnail) {
+    const thumbPatterns = [
+      /data-thumbnail=["']([^"']+)["']/i,
+      /poster=["']([^"']+)["']/i,
+      /data-poster=["']([^"']+)["']/i,
+      /thumbnail=["']([^"']+)["']/i,
+      /image=["']([^"']+)["']/i,
+      /data-image=["']([^"']+)["']/i,
+      /<img[^>]*src=["']([^"']+)["']/i,
+      /background-image:\s*url\(["']?([^"')]+)["']?\)/i
+    ];
+
+    for (const pattern of thumbPatterns) {
+      const match = embedPart.match(pattern);
+      if (match && match[1] && isValidLink(match[1])) {
+        thumbnail = match[1].trim();
+        break;
+      }
+    }
   }
 
-  // Extract thumbnail from poster=""
-  const posterThumb = embedPart.match(/poster=["']([^"']+)["']/i);
-  if (!thumbnail && posterThumb && posterThumb[1]) {
-    thumbnail = posterThumb[1].trim();
-  }
-
-  // Extract thumbnail from thumbnail=""
-  const thumbAttr = embedPart.match(/thumbnail=["']([^"']+)["']/i);
-  if (!thumbnail && thumbAttr && thumbAttr[1]) {
-    thumbnail = thumbAttr[1].trim();
-  }
-
-  // Extract thumbnail from image=""
-  const imageAttr = embedPart.match(/image=["']([^"']+)["']/i);
-  if (!thumbnail && imageAttr && imageAttr[1]) {
-    thumbnail = imageAttr[1].trim();
-  }
-
-  // Extract thumbnail from data-src=""
-  const dataSrc = embedPart.match(/data-src=["']([^"']+)["']/i);
-  if (!thumbnail && dataSrc && dataSrc[1] && isImageLink(dataSrc[1])) {
-    thumbnail = dataSrc[1].trim();
-  }
-
-  // Extract thumbnail from img src=""
-  const imgThumb = embedPart.match(/<img[^>]*src=["']([^"']+)["']/i);
-  if (!thumbnail && imgThumb && imgThumb[1]) {
-    thumbnail = imgThumb[1].trim();
-  }
-
-  // Extract thumbnail from style background-image: url(...)
-  const backgroundThumb = embedPart.match(/background-image:\s*url\(["']?([^"')]+)["']?\)/i);
-  if (!thumbnail && backgroundThumb && backgroundThumb[1]) {
-    thumbnail = backgroundThumb[1].trim();
-  }
-
-  // Last fallback: find first image-looking URL in the full code
+  // Last fallback: first image-looking URL
   if (!thumbnail) {
     const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
-
     if (imageUrl && imageUrl[0]) {
       thumbnail = imageUrl[0].trim();
     }
@@ -175,13 +215,20 @@ function extractVideoData(input) {
 function cleanTitle(title) {
   if (!title) return "";
 
-  const clean = String(title).trim();
+  let clean = String(title).trim();
+
+  clean = clean
+    .replace(/\s+/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
 
   if (!clean) return "";
 
   const lower = clean.toLowerCase();
 
-  // Remove fake/default titles
   if (
     lower === "untitled video" ||
     lower.startsWith("untitled video ") ||
@@ -190,15 +237,9 @@ function cleanTitle(title) {
     return "";
   }
 
-  // Do not use links as titles
-  if (isValidLink(clean)) {
-    return "";
-  }
+  if (isValidLink(clean)) return "";
 
-  // Do not use iframe/code pieces as titles
-  if (clean.includes("<iframe") || clean.includes("</iframe>")) {
-    return "";
-  }
+  if (clean.includes("<iframe") || clean.includes("</iframe>")) return "";
 
   return clean;
 }
@@ -212,11 +253,7 @@ function saveVideos(videos) {
 }
 
 function isValidLink(link) {
-  return link.startsWith("http://") || link.startsWith("https://");
-}
-
-function isImageLink(link) {
-  return /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(link);
+  return typeof link === "string" && (link.startsWith("http://") || link.startsWith("https://"));
 }
 
 function renderVideoList() {
@@ -244,6 +281,7 @@ function renderVideoList() {
 
     item.innerHTML = `
       <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
+      <p class="admin-help">${video.thumbnail ? "Thumbnail found" : "No thumbnail found"}</p>
       <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
     `;
 
@@ -260,11 +298,8 @@ function renderVideoList() {
 
 function deleteVideo(id) {
   let videos = getVideos();
-
   videos = videos.filter((video) => video.id !== id);
-
   saveVideos(videos);
-
   renderVideoList();
 }
 
