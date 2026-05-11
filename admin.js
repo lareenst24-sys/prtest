@@ -13,7 +13,7 @@ const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
 const MAX_UPLOAD_AT_ONCE = 100;
 
-let currentFilter = "all"; // all | missing
+let currentFilter = "all";
 
 renderVideoList();
 
@@ -47,7 +47,8 @@ addVideosBtn.addEventListener("click", () => {
       id: `video-${Date.now()}-${index}`,
       title: cleanTitle(extracted.title),
       embed: extracted.embed,
-      thumbnail: extracted.thumbnail || ""
+      thumbnail: extracted.thumbnail || "",
+      duration: cleanDuration(extracted.duration)
     });
   });
 
@@ -75,39 +76,45 @@ addVideosBtn.addEventListener("click", () => {
   alert(message);
 });
 
-showAllBtn.addEventListener("click", () => {
-  currentFilter = "all";
-  renderVideoList();
-});
+if (showAllBtn) {
+  showAllBtn.addEventListener("click", () => {
+    currentFilter = "all";
+    renderVideoList();
+  });
+}
 
-showMissingBtn.addEventListener("click", () => {
-  currentFilter = "missing";
-  renderVideoList();
-});
+if (showMissingBtn) {
+  showMissingBtn.addEventListener("click", () => {
+    currentFilter = "missing";
+    renderVideoList();
+  });
+}
 
-deleteSelectedBtn.addEventListener("click", () => {
-  const selectedCheckboxes = document.querySelectorAll(".video-select-checkbox:checked");
+if (deleteSelectedBtn) {
+  deleteSelectedBtn.addEventListener("click", () => {
+    const selectedCheckboxes = document.querySelectorAll(".video-select-checkbox:checked");
 
-  if (selectedCheckboxes.length === 0) {
-    alert("Select at least one video to delete.");
-    return;
-  }
+    if (selectedCheckboxes.length === 0) {
+      alert("Select at least one video to delete.");
+      return;
+    }
 
-  const confirmDelete = confirm(`Delete ${selectedCheckboxes.length} selected video(s)?`);
+    const confirmDelete = confirm(`Delete ${selectedCheckboxes.length} selected video(s)?`);
 
-  if (!confirmDelete) return;
+    if (!confirmDelete) return;
 
-  const selectedIds = Array.from(selectedCheckboxes).map((checkbox) => checkbox.value);
+    const selectedIds = Array.from(selectedCheckboxes).map((checkbox) => checkbox.value);
 
-  let videos = getVideos();
+    let videos = getVideos();
 
-  videos = videos.filter((video) => !selectedIds.includes(video.id));
+    videos = videos.filter((video) => !selectedIds.includes(video.id));
 
-  saveVideos(videos);
-  renderVideoList();
+    saveVideos(videos);
+    renderVideoList();
 
-  alert(`${selectedIds.length} selected video(s) deleted.`);
-});
+    alert(`${selectedIds.length} selected video(s) deleted.`);
+  });
+}
 
 clearAllBtn.addEventListener("click", () => {
   const confirmDelete = confirm("Are you sure you want to delete all saved videos?");
@@ -155,16 +162,21 @@ function extractVideoData(input) {
 
   let embedPart = trimmed;
   let manualThumbnail = "";
+  let manualDuration = "";
 
+  // Format:
+  // FULL EMBED CODE || THUMBNAIL LINK || DURATION
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||");
     embedPart = pieces[0].trim();
-    manualThumbnail = pieces[1].trim();
+    manualThumbnail = pieces[1] ? pieces[1].trim() : "";
+    manualDuration = pieces[2] ? pieces[2].trim() : "";
   }
 
   let embed = "";
   let thumbnail = manualThumbnail;
   let title = "";
+  let duration = manualDuration;
 
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
@@ -287,10 +299,37 @@ function extractVideoData(input) {
     }
   }
 
+  if (!duration) {
+    const durationPatterns = [
+      /duration=["']([^"']+)["']/i,
+      /data-duration=["']([^"']+)["']/i,
+      /length=["']([^"']+)["']/i,
+      /data-length=["']([^"']+)["']/i
+    ];
+
+    for (const pattern of durationPatterns) {
+      const match = embedPart.match(pattern);
+
+      if (match && cleanDuration(match[1])) {
+        duration = cleanDuration(match[1]);
+        break;
+      }
+    }
+  }
+
+  if (!duration) {
+    const durationText = embedPart.match(/\b\d{1,2}:\d{2}(?::\d{2})?\b/);
+
+    if (durationText && durationText[0]) {
+      duration = cleanDuration(durationText[0]);
+    }
+  }
+
   return {
     embed,
     thumbnail,
-    title
+    title,
+    duration
   };
 }
 
@@ -332,6 +371,18 @@ function cleanTitle(title) {
   return clean;
 }
 
+function cleanDuration(duration) {
+  if (!duration) return "";
+
+  const clean = String(duration).trim();
+
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
+    return clean;
+  }
+
+  return "";
+}
+
 function getVideos() {
   return JSON.parse(localStorage.getItem("videos")) || [];
 }
@@ -352,6 +403,7 @@ function renderVideoList() {
 
   videos = videos.map((video) => {
     video.title = cleanTitle(video.title);
+    video.duration = cleanDuration(video.duration);
     return video;
   });
 
@@ -364,9 +416,13 @@ function renderVideoList() {
 
   if (currentFilter === "missing") {
     displayVideos = videos.filter(video => !video.thumbnail);
-    filterStatusText.textContent = `Showing videos missing thumbnails: ${displayVideos.length}`;
+    if (filterStatusText) {
+      filterStatusText.textContent = `Showing videos missing thumbnails: ${displayVideos.length}`;
+    }
   } else {
-    filterStatusText.textContent = "Showing all videos";
+    if (filterStatusText) {
+      filterStatusText.textContent = "Showing all videos";
+    }
   }
 
   videoCountText.textContent = `${totalVideos} videos saved • ${missingThumbnailVideos} missing thumbnails`;
@@ -386,12 +442,17 @@ function renderVideoList() {
       ? `<span class="thumb-ok">Thumbnail found</span>`
       : `<span class="thumb-missing">No thumbnail</span>`;
 
+    const durationStatus = video.duration
+      ? `<span class="admin-help">Duration: ${escapeHTML(video.duration)}</span>`
+      : `<span class="admin-help">No duration</span>`;
+
     item.innerHTML = `
       <label class="video-select-row">
         <input type="checkbox" class="video-select-checkbox" value="${escapeHTML(video.id)}">
         <div class="admin-video-info">
           <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
           <p class="admin-help">${thumbStatus}</p>
+          <p class="admin-help">${durationStatus}</p>
         </div>
       </label>
 
