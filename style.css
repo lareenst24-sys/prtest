@@ -397,3 +397,17 @@ footer {
   min-height: 360px !important;
   line-height: 1.5;
 }
+.big-upload-box {
+  min-height: 360px !important;
+  max-height: 360px;
+  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
