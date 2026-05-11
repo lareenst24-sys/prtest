@@ -10,7 +10,9 @@ body {
   color: #ffffff;
 }
 
-/* NAVBAR */
+/* =========================
+   NAVBAR
+========================= */
 
 .navbar {
   width: 100%;
@@ -43,7 +45,9 @@ nav a:hover {
   opacity: 1;
 }
 
-/* HOME PAGE */
+/* =========================
+   HOME PAGE
+========================= */
 
 .content {
   padding: 24px 2.5% 40px;
@@ -71,13 +75,7 @@ nav a:hover {
   aspect-ratio: 16 / 9;
   border-radius: 14px;
   overflow: hidden;
-  background: #1a1a1a;
-  position: relative;
-}
-
-.thumb-wrap {
-  width: 100%;
-  height: 100%;
+  background: #181818;
   position: relative;
 }
 
@@ -86,6 +84,7 @@ nav a:hover {
   height: 100%;
   object-fit: cover;
   display: block;
+  background: #181818;
   transition: transform 0.2s ease;
 }
 
@@ -93,35 +92,35 @@ nav a:hover {
   transform: scale(1.03);
 }
 
-.no-thumb-wrap {
-  background: linear-gradient(180deg, #202020, #121212);
-}
-
 .no-thumbnail {
   width: 100%;
   height: 100%;
-  color: #d0d0d0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
+  background: #181818;
+}
+
+.thumbnail-failed {
+  background: #181818;
+}
+
+.thumbnail-loading {
+  display: none !important;
 }
 
 .play-preview {
+  display: none !important;
+}
+
+.duration-badge {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.78);
+  right: 8px;
+  bottom: 8px;
+  background: rgba(0, 0, 0, 0.85);
   color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  padding-left: 3px;
-  z-index: 2;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 5;
 }
 
 .video-meta {
@@ -140,7 +139,9 @@ nav a:hover {
   font-size: 14px;
 }
 
-/* LOAD MORE */
+/* =========================
+   LOAD MORE
+========================= */
 
 .load-more-wrapper {
   display: flex;
@@ -164,7 +165,9 @@ button:hover {
   background: #e3e3e3;
 }
 
-/* WATCH PAGE */
+/* =========================
+   WATCH PAGE
+========================= */
 
 .watch-page {
   padding: 24px 2.5% 40px;
@@ -205,7 +208,9 @@ button:hover {
   text-decoration: none;
 }
 
-/* ADMIN PAGE */
+/* =========================
+   ADMIN PAGE
+========================= */
 
 .admin-page {
   padding: 28px 2.5% 40px;
@@ -268,6 +273,22 @@ button:hover {
   resize: vertical;
 }
 
+/* Big upload code box */
+.big-upload-box {
+  min-height: 360px !important;
+  max-height: 360px;
+  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .admin-divider {
   border: none;
   border-top: 1px solid #2a2a2a;
@@ -279,6 +300,12 @@ button:hover {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .admin-help {
@@ -301,6 +328,40 @@ button:hover {
   font-size: 15px;
 }
 
+.selectable-video-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.video-select-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.video-select-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #ffffff;
+}
+
+.admin-video-info {
+  flex: 1;
+}
+
+.thumb-ok {
+  color: #5cff9d;
+}
+
+.thumb-missing {
+  color: #ff6868;
+}
+
 .delete-btn {
   background: #ff4d4d;
   color: #ffffff;
@@ -310,7 +371,14 @@ button:hover {
   background: #e43737;
 }
 
-/* FOOTER */
+.small-delete-btn {
+  padding: 9px 15px;
+  margin-bottom: 0;
+}
+
+/* =========================
+   FOOTER
+========================= */
 
 footer {
   padding: 24px 2.5%;
@@ -320,7 +388,9 @@ footer {
   font-size: 14px;
 }
 
-/* MOBILE */
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 700px) {
   .navbar {
@@ -363,143 +433,21 @@ footer {
   .saved-header {
     flex-direction: column;
   }
-}
-.iframe-preview-box {
-  position: relative;
-  background: #000;
-}
 
-.iframe-preview-box iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-  pointer-events: none;
-}
+  .admin-actions {
+    width: 100%;
+  }
 
-.iframe-click-cover {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .admin-actions button {
+    width: 100%;
+  }
 
-.iframe-click-cover .play-preview {
-  opacity: 0;
-}
+  .selectable-video-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 
-.video-card:hover .iframe-click-cover .play-preview {
-  opacity: 1;
-}
-.big-upload-box {
-  min-height: 360px !important;
-  line-height: 1.5;
-}
-.big-upload-box {
-  min-height: 360px !important;
-  max-height: 360px;
-  overflow: auto;
-  overflow-x: auto;
-  overflow-y: auto;
-  white-space: pre;
-  overflow-wrap: normal;
-  word-break: normal;
-  font-family: Consolas, Monaco, "Courier New", monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  resize: vertical;
-}
-.admin-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.selectable-video-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: center;
-}
-
-.video-select-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  cursor: pointer;
-  flex: 1;
-}
-
-.video-select-checkbox {
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-  accent-color: #ffffff;
-}
-
-.admin-video-info {
-  flex: 1;
-}
-
-.thumb-ok {
-  color: #5cff9d;
-}
-
-.thumb-missing {
-  color: #ff6868;
-}
-
-.small-delete-btn {
-  padding: 9px 15px;
-  margin-bottom: 0;
-}
-.video-thumb iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-  pointer-events: none;
-}
-
-.iframe-click-cover {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-}
-.thumbnail-loading {
-  width: 100%;
-  height: 100%;
-  background: #181818;
-  color: #777;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-}
-.play-preview {
-  display: none !important;
-}
-
-.duration-badge {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #ffffff;
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  z-index: 5;
-}
-.no-thumbnail {
-  width: 100%;
-  height: 100%;
-  background: #181818;
-}
-
-.thumbnail-loading {
-  display: none !important;
+  .small-delete-btn {
+    width: 100%;
+  }
 }
