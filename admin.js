@@ -9,12 +9,14 @@ const filterStatusText = document.getElementById("filterStatusText");
 const clearAllBtn = document.getElementById("clearAllBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 const showMissingBtn = document.getElementById("showMissingBtn");
+const saveAllDurationsBtn = document.getElementById("saveAllDurationsBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
 const MAX_UPLOAD_AT_ONCE = 100;
 
 let currentFilter = "all";
 
+/* Auto-format duration while typing */
 document.addEventListener("input", (event) => {
   if (!event.target.classList.contains("duration-input")) return;
 
@@ -93,6 +95,12 @@ if (showMissingBtn) {
   showMissingBtn.addEventListener("click", () => {
     currentFilter = "missing";
     renderVideoList();
+  });
+}
+
+if (saveAllDurationsBtn) {
+  saveAllDurationsBtn.addEventListener("click", () => {
+    saveAllDurations();
   });
 }
 
@@ -379,12 +387,10 @@ function autoFormatDuration(value) {
 
   if (!digits) return "";
 
-  // 37 -> 0:37
   if (digits.length <= 2) {
     return `0:${digits.padStart(2, "0")}`;
   }
 
-  // 2337 -> 23:37
   if (digits.length <= 4) {
     const minutes = digits.slice(0, -2);
     const seconds = digits.slice(-2);
@@ -392,7 +398,6 @@ function autoFormatDuration(value) {
     return `${Number(minutes)}:${seconds}`;
   }
 
-  // 14530 -> 1:45:30
   const hours = digits.slice(0, -4);
   const minutes = digits.slice(-4, -2);
   const seconds = digits.slice(-2);
@@ -554,6 +559,55 @@ function saveDuration(id) {
   renderVideoList();
 
   alert("Duration saved.");
+}
+
+function saveAllDurations() {
+  const durationInputs = document.querySelectorAll(".duration-input");
+
+  if (durationInputs.length === 0) {
+    alert("No duration inputs found.");
+    return;
+  }
+
+  let videos = getVideos();
+  let savedCount = 0;
+  let skippedCount = 0;
+
+  durationInputs.forEach((input) => {
+    const id = input.id.replace("duration-", "");
+    const duration = cleanDuration(autoFormatDuration(input.value));
+
+    if (!duration) {
+      skippedCount++;
+      return;
+    }
+
+    let matched = false;
+
+    videos = videos.map((video) => {
+      if (video.id === id) {
+        matched = true;
+
+        return {
+          ...video,
+          duration
+        };
+      }
+
+      return video;
+    });
+
+    if (matched) {
+      savedCount++;
+    } else {
+      skippedCount++;
+    }
+  });
+
+  saveVideos(videos);
+  renderVideoList();
+
+  alert(`${savedCount} duration(s) saved. ${skippedCount} skipped.`);
 }
 
 function deleteVideo(id) {
