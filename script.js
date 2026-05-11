@@ -45,7 +45,7 @@ function loadVideos() {
 
     card.innerHTML = `
       <div class="video-thumb">
-        <div class="thumbnail-loading">Loading thumbnail...</div>
+        <div class="no-thumbnail"></div>
         ${durationHTML}
       </div>
 
@@ -63,12 +63,13 @@ function loadVideos() {
     const thumbBox = card.querySelector(".video-thumb");
 
     if (video.thumbnail) {
-      loadThumbnailWithRetry(thumbBox, video.thumbnail, cleanVideoTitle, durationHTML);
-    } else {
-      thumbBox.innerHTML = `
-        <div class="no-thumbnail"></div>
-        ${durationHTML}
-      `;
+      const thumbnailWorkedBefore = localStorage.getItem(`thumb-worked-${video.id}`) === "true";
+
+      if (thumbnailWorkedBefore) {
+        loadThumbnailWithRetry(thumbBox, video, cleanVideoTitle, durationHTML);
+      } else {
+        loadThumbnailOnce(thumbBox, video, cleanVideoTitle, durationHTML);
+      }
     }
 
     card.addEventListener("click", () => {
@@ -81,15 +82,43 @@ function loadVideos() {
   currentIndex += videosPerLoad;
 }
 
-function loadThumbnailWithRetry(thumbBox, thumbnailUrl, title, durationHTML, attempt = 1) {
-  const maxAttempts = 8;
-
+function loadThumbnailOnce(thumbBox, video, title, durationHTML) {
   const img = new Image();
+
   img.className = "thumbnail-img";
   img.alt = title || "Video thumbnail";
   img.loading = "lazy";
 
   img.onload = () => {
+    localStorage.setItem(`thumb-worked-${video.id}`, "true");
+
+    thumbBox.innerHTML = "";
+    thumbBox.appendChild(img);
+    thumbBox.insertAdjacentHTML("beforeend", durationHTML);
+  };
+
+  img.onerror = () => {
+    thumbBox.innerHTML = `
+      <div class="no-thumbnail"></div>
+      ${durationHTML}
+    `;
+  };
+
+  img.src = video.thumbnail;
+}
+
+function loadThumbnailWithRetry(thumbBox, video, title, durationHTML, attempt = 1) {
+  const maxAttempts = 6;
+
+  const img = new Image();
+
+  img.className = "thumbnail-img";
+  img.alt = title || "Video thumbnail";
+  img.loading = "lazy";
+
+  img.onload = () => {
+    localStorage.setItem(`thumb-worked-${video.id}`, "true");
+
     thumbBox.innerHTML = "";
     thumbBox.appendChild(img);
     thumbBox.insertAdjacentHTML("beforeend", durationHTML);
@@ -97,15 +126,10 @@ function loadThumbnailWithRetry(thumbBox, thumbnailUrl, title, durationHTML, att
 
   img.onerror = () => {
     if (attempt < maxAttempts) {
-      const delay = attempt * 1200;
-
-      thumbBox.innerHTML = `
-        <div class="thumbnail-loading">Retrying thumbnail ${attempt}/${maxAttempts}...</div>
-        ${durationHTML}
-      `;
+      const delay = attempt * 1000;
 
       setTimeout(() => {
-        loadThumbnailWithRetry(thumbBox, thumbnailUrl, title, durationHTML, attempt + 1);
+        loadThumbnailWithRetry(thumbBox, video, title, durationHTML, attempt + 1);
       }, delay);
     } else {
       thumbBox.innerHTML = `
@@ -115,9 +139,7 @@ function loadThumbnailWithRetry(thumbBox, thumbnailUrl, title, durationHTML, att
     }
   };
 
-  // Cache-buster helps when the image URL sometimes fails after refresh
-  const separator = thumbnailUrl.includes("?") ? "&" : "?";
-  img.src = `${thumbnailUrl}${separator}retry=${Date.now()}-${attempt}`;
+  img.src = video.thumbnail;
 }
 
 function createLoadMoreButton() {
