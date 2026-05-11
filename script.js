@@ -2,13 +2,13 @@ const videoGrid = document.getElementById("videoGrid");
 
 let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
 
-// Clean saved videos before rendering
 savedVideos = savedVideos.map((video) => {
   return {
     ...video,
     title: cleanTitle(video.title),
     thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
-    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : ""
+    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
+    duration: cleanDuration(video.duration)
   };
 }).filter((video) => video.embed);
 
@@ -39,10 +39,14 @@ function loadVideos() {
 
     const cleanVideoTitle = cleanTitle(video.title);
 
+    const durationHTML = video.duration
+      ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
+      : "";
+
     card.innerHTML = `
-      <div class="video-thumb" data-video-id="${escapeAttribute(video.id)}">
-        ${getPreviewHTML(video, cleanVideoTitle)}
-        <div class="play-preview">▶</div>
+      <div class="video-thumb">
+        <div class="thumbnail-loading">Loading thumbnail...</div>
+        ${durationHTML}
       </div>
 
       ${
@@ -56,17 +60,15 @@ function loadVideos() {
       }
     `;
 
-    const img = card.querySelector(".thumbnail-img");
+    const thumbBox = card.querySelector(".video-thumb");
 
-    if (img) {
-      img.addEventListener("error", () => {
-        const thumbBox = card.querySelector(".video-thumb");
-
-        thumbBox.innerHTML = `
-          ${getIframeFallbackHTML(video, cleanVideoTitle)}
-          <div class="play-preview">▶</div>
-        `;
-      });
+    if (video.thumbnail) {
+      loadThumbnailWithRetry(thumbBox, video.thumbnail, cleanVideoTitle, durationHTML);
+    } else {
+      thumbBox.innerHTML = `
+        <div class="no-thumbnail"></div>
+        ${durationHTML}
+      `;
     }
 
     card.addEventListener("click", () => {
@@ -79,33 +81,43 @@ function loadVideos() {
   currentIndex += videosPerLoad;
 }
 
-function getPreviewHTML(video, cleanVideoTitle) {
-  if (video.thumbnail) {
-    return `
-      <img 
-        src="${escapeAttribute(video.thumbnail)}" 
-        alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
-        class="thumbnail-img"
-        loading="lazy"
-      >
-    `;
-  }
+function loadThumbnailWithRetry(thumbBox, thumbnailUrl, title, durationHTML, attempt = 1) {
+  const maxAttempts = 8;
 
-  return getIframeFallbackHTML(video, cleanVideoTitle);
-}
+  const img = new Image();
+  img.className = "thumbnail-img";
+  img.alt = title || "Video thumbnail";
+  img.loading = "lazy";
 
-function getIframeFallbackHTML(video, cleanVideoTitle) {
-  return `
-    <iframe
-      src="${escapeAttribute(video.embed)}"
-      title="${escapeAttribute(cleanVideoTitle || "Video")}"
-      frameborder="0"
-      loading="lazy"
-      allowfullscreen>
-    </iframe>
+  img.onload = () => {
+    thumbBox.innerHTML = "";
+    thumbBox.appendChild(img);
+    thumbBox.insertAdjacentHTML("beforeend", durationHTML);
+  };
 
-    <div class="iframe-click-cover"></div>
-  `;
+  img.onerror = () => {
+    if (attempt < maxAttempts) {
+      const delay = attempt * 1200;
+
+      thumbBox.innerHTML = `
+        <div class="thumbnail-loading">Retrying thumbnail ${attempt}/${maxAttempts}...</div>
+        ${durationHTML}
+      `;
+
+      setTimeout(() => {
+        loadThumbnailWithRetry(thumbBox, thumbnailUrl, title, durationHTML, attempt + 1);
+      }, delay);
+    } else {
+      thumbBox.innerHTML = `
+        <div class="no-thumbnail"></div>
+        ${durationHTML}
+      `;
+    }
+  };
+
+  // Cache-buster helps when the image URL sometimes fails after refresh
+  const separator = thumbnailUrl.includes("?") ? "&" : "?";
+  img.src = `${thumbnailUrl}${separator}retry=${Date.now()}-${attempt}`;
 }
 
 function createLoadMoreButton() {
@@ -155,9 +167,7 @@ function cleanTitle(title) {
     return "";
   }
 
-  if (isValidLink(clean)) {
-    return "";
-  }
+  if (isValidLink(clean)) return "";
 
   if (
     clean.includes("<iframe") ||
@@ -168,6 +178,18 @@ function cleanTitle(title) {
   }
 
   return clean;
+}
+
+function cleanDuration(duration) {
+  if (!duration) return "";
+
+  const clean = String(duration).trim();
+
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
+    return clean;
+  }
+
+  return "";
 }
 
 function decodeUrl(url) {
