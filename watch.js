@@ -4,7 +4,6 @@ const urlParams = new URLSearchParams(window.location.search);
 const videoId = urlParams.get("id");
 
 const videos = JSON.parse(localStorage.getItem("videos")) || [];
-
 const video = videos.find((item) => item.id === videoId);
 
 if (!video) {
@@ -14,21 +13,34 @@ if (!video) {
     <a href="index.html" class="back-link">Go back home</a>
   `;
 } else {
-  let currentViews = Number(localStorage.getItem(`views-${video.id}`)) || 0;
-  currentViews++;
-
-  localStorage.setItem(`views-${video.id}`, currentViews);
+  const cleanTitle = isFakeTitle(video.title) ? "" : video.title;
 
   watchContainer.innerHTML = `
     <div class="watch-player">
-      <iframe src="${escapeAttribute(video.embed)}" title="${escapeAttribute(video.title)}" frameborder="0" allowfullscreen></iframe>
+      <iframe 
+        src="${escapeAttribute(video.embed)}" 
+        title="${escapeAttribute(cleanTitle || "Video")}" 
+        frameborder="0" 
+        allowfullscreen>
+      </iframe>
     </div>
 
     <div class="watch-info">
-      <h1>${escapeHTML(video.title)}</h1>
-      <p>${currentViews} views</p>
+      ${cleanTitle ? `<h1>${escapeHTML(cleanTitle)}</h1>` : ""}
     </div>
   `;
+}
+
+function isFakeTitle(title) {
+  if (!title) return false;
+
+  const clean = String(title).trim().toLowerCase();
+
+  return (
+    clean === "untitled video" ||
+    clean.startsWith("untitled video ") ||
+    /^video\s*\d+$/i.test(clean)
+  );
 }
 
 function escapeHTML(text) {
