@@ -8,7 +8,8 @@ savedVideos = savedVideos.map((video) => {
     ...video,
     title: cleanTitle(video.title),
     thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
-    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : ""
+    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
+    duration: cleanDuration(video.duration)
   };
 }).filter((video) => video.embed);
 
@@ -37,13 +38,11 @@ function loadVideos() {
     card.className = "video-card";
     card.dataset.videoId = video.id;
 
-    const cleanVideoTitle = cleanTitle(video.title);
-
     const thumbnailHTML = video.thumbnail
       ? `
         <img 
           src="${escapeAttribute(video.thumbnail)}" 
-          alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
+          alt="Video thumbnail" 
           class="thumbnail-img"
           loading="lazy"
           onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
@@ -51,20 +50,15 @@ function loadVideos() {
       `
       : "";
 
-    const titleHTML = cleanVideoTitle
-      ? `
-        <div class="video-meta">
-          <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
-        </div>
-      `
+    const durationHTML = video.duration
+      ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
       : "";
 
     card.innerHTML = `
       <div class="video-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
         ${thumbnailHTML}
+        ${durationHTML}
       </div>
-
-      ${titleHTML}
     `;
 
     card.addEventListener("click", () => {
@@ -137,13 +131,32 @@ function cleanTitle(title) {
   return clean;
 }
 
+function cleanDuration(duration) {
+  if (!duration) return "";
+
+  const clean = String(duration).trim();
+
+  // Accepts: 1:23, 12:45, 1:02:33
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
+    return clean;
+  }
+
+  return "";
+}
+
 function decodeUrl(url) {
   if (!url) return "";
 
-  return String(url)
+  let clean = String(url)
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
+
+  if (clean.startsWith("//")) {
+    clean = "https:" + clean;
+  }
+
+  return clean;
 }
 
 function isValidLink(link) {
