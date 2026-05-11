@@ -15,6 +15,12 @@ const MAX_UPLOAD_AT_ONCE = 100;
 
 let currentFilter = "all";
 
+document.addEventListener("input", (event) => {
+  if (!event.target.classList.contains("duration-input")) return;
+
+  event.target.value = autoFormatDuration(event.target.value);
+});
+
 renderVideoList();
 
 addVideosBtn.addEventListener("click", () => {
@@ -368,6 +374,32 @@ function cleanDuration(duration) {
   return "";
 }
 
+function autoFormatDuration(value) {
+  const digits = String(value).replace(/\D/g, "");
+
+  if (!digits) return "";
+
+  // 37 -> 0:37
+  if (digits.length <= 2) {
+    return `0:${digits.padStart(2, "0")}`;
+  }
+
+  // 2337 -> 23:37
+  if (digits.length <= 4) {
+    const minutes = digits.slice(0, -2);
+    const seconds = digits.slice(-2);
+
+    return `${Number(minutes)}:${seconds}`;
+  }
+
+  // 14530 -> 1:45:30
+  const hours = digits.slice(0, -4);
+  const minutes = digits.slice(-4, -2);
+  const seconds = digits.slice(-2);
+
+  return `${Number(hours)}:${minutes}:${seconds}`;
+}
+
 function decodeText(text) {
   if (!text) return "";
 
@@ -498,7 +530,7 @@ function saveDuration(id) {
 
   if (!input) return;
 
-  const duration = cleanDuration(input.value);
+  const duration = cleanDuration(autoFormatDuration(input.value));
 
   if (!duration) {
     alert("Enter duration like 12:45 or 1:02:33");
