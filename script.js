@@ -2,6 +2,7 @@ const videoGrid = document.getElementById("videoGrid");
 
 let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
 
+// Clean saved videos before rendering
 savedVideos = savedVideos.map((video) => {
   return {
     ...video,
@@ -39,38 +40,38 @@ function loadVideos() {
 
     const cleanVideoTitle = cleanTitle(video.title);
 
+    const thumbnailHTML = video.thumbnail
+      ? `
+        <img 
+          src="${escapeAttribute(video.thumbnail)}" 
+          alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
+          class="thumbnail-img"
+          loading="lazy"
+          onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
+        >
+      `
+      : "";
+
     const durationHTML = video.duration
       ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
       : "";
 
+    const titleHTML = cleanVideoTitle
+      ? `
+        <div class="video-meta">
+          <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
+        </div>
+      `
+      : "";
+
     card.innerHTML = `
-      <div class="video-thumb">
-        <div class="no-thumbnail"></div>
+      <div class="video-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
+        ${thumbnailHTML}
         ${durationHTML}
       </div>
 
-      ${
-        cleanVideoTitle
-          ? `
-            <div class="video-meta">
-              <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
-            </div>
-          `
-          : ""
-      }
+      ${titleHTML}
     `;
-
-    const thumbBox = card.querySelector(".video-thumb");
-
-    if (video.thumbnail) {
-      const thumbnailWorkedBefore = localStorage.getItem(`thumb-worked-${video.id}`) === "true";
-
-      if (thumbnailWorkedBefore) {
-        loadThumbnailWithRetry(thumbBox, video, cleanVideoTitle, durationHTML);
-      } else {
-        loadThumbnailOnce(thumbBox, video, cleanVideoTitle, durationHTML);
-      }
-    }
 
     card.addEventListener("click", () => {
       window.location.href = `watch.html?id=${encodeURIComponent(video.id)}`;
@@ -80,66 +81,6 @@ function loadVideos() {
   });
 
   currentIndex += videosPerLoad;
-}
-
-function loadThumbnailOnce(thumbBox, video, title, durationHTML) {
-  const img = new Image();
-
-  img.className = "thumbnail-img";
-  img.alt = title || "Video thumbnail";
-  img.loading = "lazy";
-
-  img.onload = () => {
-    localStorage.setItem(`thumb-worked-${video.id}`, "true");
-
-    thumbBox.innerHTML = "";
-    thumbBox.appendChild(img);
-    thumbBox.insertAdjacentHTML("beforeend", durationHTML);
-  };
-
-  img.onerror = () => {
-    thumbBox.innerHTML = `
-      <div class="no-thumbnail"></div>
-      ${durationHTML}
-    `;
-  };
-
-  img.src = video.thumbnail;
-}
-
-function loadThumbnailWithRetry(thumbBox, video, title, durationHTML, attempt = 1) {
-  const maxAttempts = 6;
-
-  const img = new Image();
-
-  img.className = "thumbnail-img";
-  img.alt = title || "Video thumbnail";
-  img.loading = "lazy";
-
-  img.onload = () => {
-    localStorage.setItem(`thumb-worked-${video.id}`, "true");
-
-    thumbBox.innerHTML = "";
-    thumbBox.appendChild(img);
-    thumbBox.insertAdjacentHTML("beforeend", durationHTML);
-  };
-
-  img.onerror = () => {
-    if (attempt < maxAttempts) {
-      const delay = attempt * 1000;
-
-      setTimeout(() => {
-        loadThumbnailWithRetry(thumbBox, video, title, durationHTML, attempt + 1);
-      }, delay);
-    } else {
-      thumbBox.innerHTML = `
-        <div class="no-thumbnail"></div>
-        ${durationHTML}
-      `;
-    }
-  };
-
-  img.src = video.thumbnail;
 }
 
 function createLoadMoreButton() {
@@ -207,6 +148,7 @@ function cleanDuration(duration) {
 
   const clean = String(duration).trim();
 
+  // Allows 1:23, 12:45, 1:02:33
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
     return clean;
   }
