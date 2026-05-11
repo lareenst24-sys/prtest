@@ -131,7 +131,8 @@ function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
   /*
-    Best separator for large multi-line embeds:
+    BEST for big multiline embed codes:
+    Separate each video with:
     ---VIDEO---
   */
   const separatedBlocks = trimmed
@@ -144,19 +145,12 @@ function splitEmbedBlocks(text) {
   }
 
   /*
-    Extract full iframe blocks first.
-    This keeps:
+    BEST for normal use:
+    One full video embed code per line.
+
+    Example:
     <iframe ...></iframe> || 12:45
-    <iframe ...></iframe> || thumb || 12:45
-  */
-  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]*)?/gi);
-
-  if (iframeMatches && iframeMatches.length > 0) {
-    return iframeMatches.map(item => item.trim()).filter(Boolean);
-  }
-
-  /*
-    Fallback: one item per line.
+    <iframe ...></iframe> || https://thumb.jpg || 12:45
   */
   const lines = trimmed
     .split("\n")
@@ -165,6 +159,18 @@ function splitEmbedBlocks(text) {
 
   if (lines.length > 1) {
     return lines;
+  }
+
+  /*
+    Fallback:
+    If many iframes are pasted in one giant line.
+    This may lose thumbnail data if the thumbnail is outside the iframe,
+    so one-per-line is better.
+  */
+  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]*)?/gi);
+
+  if (iframeMatches && iframeMatches.length > 1) {
+    return iframeMatches.map(item => item.trim()).filter(Boolean);
   }
 
   return [trimmed];
@@ -338,7 +344,7 @@ function extractVideoData(input) {
   }
 
   /*
-    Duration extraction from manual value or embed code itself.
+    Duration extraction.
   */
 
   if (!duration) {
@@ -425,12 +431,18 @@ function cleanDuration(duration) {
 function decodeText(text) {
   if (!text) return "";
 
-  return String(text)
+  let clean = String(text)
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
+
+  if (clean.startsWith("//")) {
+    clean = "https:" + clean;
+  }
+
+  return clean;
 }
 
 function getVideos() {
@@ -444,7 +456,8 @@ function saveVideos(videos) {
 function isValidLink(link) {
   return typeof link === "string" && (
     link.startsWith("http://") ||
-    link.startsWith("https://")
+    link.startsWith("https://") ||
+    link.startsWith("//")
   );
 }
 
