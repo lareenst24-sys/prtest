@@ -38,22 +38,20 @@ function loadVideos() {
     card.className = "video-card";
     card.dataset.videoId = video.id;
 
-    const cleanVideoTitle = cleanTitle(video.title);
+    const durationHTML = video.duration
+      ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
+      : "";
 
     const thumbnailHTML = video.thumbnail
       ? `
         <img 
           src="${escapeAttribute(video.thumbnail)}" 
-          alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
+          alt="Video thumbnail" 
           class="thumbnail-img"
           loading="lazy"
           onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
         >
       `
-      : "";
-
-    const durationHTML = video.duration
-      ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
       : "";
 
     card.innerHTML = `
