@@ -4,9 +4,16 @@ const addVideosBtn = document.getElementById("addVideosBtn");
 
 const videoList = document.getElementById("videoList");
 const videoCountText = document.getElementById("videoCountText");
+const filterStatusText = document.getElementById("filterStatusText");
+
 const clearAllBtn = document.getElementById("clearAllBtn");
+const showAllBtn = document.getElementById("showAllBtn");
+const showMissingBtn = document.getElementById("showMissingBtn");
+const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
 const MAX_UPLOAD_AT_ONCE = 100;
+
+let currentFilter = "all"; // all | missing
 
 renderVideoList();
 
@@ -68,6 +75,40 @@ addVideosBtn.addEventListener("click", () => {
   alert(message);
 });
 
+showAllBtn.addEventListener("click", () => {
+  currentFilter = "all";
+  renderVideoList();
+});
+
+showMissingBtn.addEventListener("click", () => {
+  currentFilter = "missing";
+  renderVideoList();
+});
+
+deleteSelectedBtn.addEventListener("click", () => {
+  const selectedCheckboxes = document.querySelectorAll(".video-select-checkbox:checked");
+
+  if (selectedCheckboxes.length === 0) {
+    alert("Select at least one video to delete.");
+    return;
+  }
+
+  const confirmDelete = confirm(`Delete ${selectedCheckboxes.length} selected video(s)?`);
+
+  if (!confirmDelete) return;
+
+  const selectedIds = Array.from(selectedCheckboxes).map((checkbox) => checkbox.value);
+
+  let videos = getVideos();
+
+  videos = videos.filter((video) => !selectedIds.includes(video.id));
+
+  saveVideos(videos);
+  renderVideoList();
+
+  alert(`${selectedIds.length} selected video(s) deleted.`);
+});
+
 clearAllBtn.addEventListener("click", () => {
   const confirmDelete = confirm("Are you sure you want to delete all saved videos?");
 
@@ -82,15 +123,6 @@ clearAllBtn.addEventListener("click", () => {
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
-  /*
-    Best format:
-    One full embed code per line.
-
-    Example:
-    <iframe src="https://example.com/embed/1" title="Video one"></iframe>
-    <iframe src="https://example.com/embed/2" title="Video two"></iframe>
-  */
-
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -100,27 +132,11 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  /*
-    If many iframes are pasted together in one big line/block,
-    this extracts each <iframe>...</iframe> separately.
-  */
-
   const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
     return iframeMatches;
   }
-
-  /*
-    If your embed code is large/multi-line, separate videos using:
-
-    ---VIDEO---
-
-    Example:
-    FULL EMBED CODE 1
-    ---VIDEO---
-    FULL EMBED CODE 2
-  */
 
   const separatedBlocks = trimmed
     .split("---VIDEO---")
@@ -140,15 +156,6 @@ function extractVideoData(input) {
   let embedPart = trimmed;
   let manualThumbnail = "";
 
-  /*
-    Optional manual thumbnail format:
-
-    FULL EMBED CODE || THUMBNAIL LINK
-
-    Example:
-    <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg
-  */
-
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||");
     embedPart = pieces[0].trim();
@@ -159,7 +166,6 @@ function extractVideoData(input) {
   let thumbnail = manualThumbnail;
   let title = "";
 
-  // Extract iframe src from full code
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
   if (iframeSrc && iframeSrc[1]) {
@@ -168,10 +174,8 @@ function extractVideoData(input) {
     embed = embedPart;
   }
 
-  // Try to parse full HTML
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
 
-  // Try to extract title from common HTML places
   const titleSelectors = [
     "[title]",
     "[data-title]",
@@ -204,7 +208,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Regex title fallback
   if (!title) {
     const titlePatterns = [
       /title=["']([^"']+)["']/i,
@@ -223,7 +226,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Try to extract thumbnail from common HTML places
   const imageSelectors = [
     "img[src]",
     "img[data-src]",
@@ -255,7 +257,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Regex thumbnail fallback
   if (!thumbnail) {
     const thumbPatterns = [
       /data-thumbnail=["']([^"']+)["']/i,
@@ -278,7 +279,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Last fallback: first image-looking URL
   if (!thumbnail) {
     const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
 
@@ -311,7 +311,6 @@ function cleanTitle(title) {
 
   const lower = clean.toLowerCase();
 
-  // Remove fake/default titles
   if (
     lower === "untitled video" ||
     lower.startsWith("untitled video ") ||
@@ -320,12 +319,8 @@ function cleanTitle(title) {
     return "";
   }
 
-  // Remove links as titles
-  if (isValidLink(clean)) {
-    return "";
-  }
+  if (isValidLink(clean)) return "";
 
-  // Remove iframe/code as title
   if (
     clean.includes("<iframe") ||
     clean.includes("</iframe>") ||
@@ -362,32 +357,54 @@ function renderVideoList() {
 
   saveVideos(videos);
 
-  videoCountText.textContent = `${videos.length} videos saved`;
+  const totalVideos = videos.length;
+  const missingThumbnailVideos = videos.filter(video => !video.thumbnail).length;
 
-  if (videos.length === 0) {
-    videoList.innerHTML = "<p>No videos added yet.</p>";
+  let displayVideos = videos;
+
+  if (currentFilter === "missing") {
+    displayVideos = videos.filter(video => !video.thumbnail);
+    filterStatusText.textContent = `Showing videos missing thumbnails: ${displayVideos.length}`;
+  } else {
+    filterStatusText.textContent = "Showing all videos";
+  }
+
+  videoCountText.textContent = `${totalVideos} videos saved • ${missingThumbnailVideos} missing thumbnails`;
+
+  if (displayVideos.length === 0) {
+    videoList.innerHTML = "<p>No videos to show.</p>";
     return;
   }
 
   videoList.innerHTML = "";
 
-  videos.slice(0, 50).forEach((video) => {
+  displayVideos.slice(0, 100).forEach((video) => {
     const item = document.createElement("div");
-    item.className = "admin-video-item";
+    item.className = "admin-video-item selectable-video-item";
+
+    const thumbStatus = video.thumbnail
+      ? `<span class="thumb-ok">Thumbnail found</span>`
+      : `<span class="thumb-missing">No thumbnail</span>`;
 
     item.innerHTML = `
-      <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
-      <p class="admin-help">${video.thumbnail ? "Thumbnail found" : "No thumbnail found"}</p>
-      <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
+      <label class="video-select-row">
+        <input type="checkbox" class="video-select-checkbox" value="${escapeHTML(video.id)}">
+        <div class="admin-video-info">
+          <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
+          <p class="admin-help">${thumbStatus}</p>
+        </div>
+      </label>
+
+      <button class="delete-btn small-delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
     `;
 
     videoList.appendChild(item);
   });
 
-  if (videos.length > 50) {
+  if (displayVideos.length > 100) {
     const moreText = document.createElement("p");
     moreText.className = "admin-help";
-    moreText.textContent = `Showing latest 50 videos only. Total saved: ${videos.length}`;
+    moreText.textContent = `Showing first 100 results only. Current filter has ${displayVideos.length} videos.`;
     videoList.appendChild(moreText);
   }
 }
