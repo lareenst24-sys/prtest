@@ -131,36 +131,9 @@ function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
   /*
-    Supported examples:
-
-    1)
-    <iframe ...></iframe>
-
-    2)
-    <iframe ...></iframe> || 12:45
-
-    3)
-    <iframe ...></iframe> || https://example.com/thumb.jpg
-
-    4)
-    <iframe ...></iframe> || https://example.com/thumb.jpg || 12:45
+    Best separator for large multi-line embeds:
+    ---VIDEO---
   */
-
-  const lines = trimmed
-    .split("\n")
-    .map(line => line.trim())
-    .filter(line => line.length > 0);
-
-  if (lines.length > 1) {
-    return lines;
-  }
-
-  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(\s*\|\|[^\n\r]+)?/gi);
-
-  if (iframeMatches && iframeMatches.length > 1) {
-    return iframeMatches;
-  }
-
   const separatedBlocks = trimmed
     .split("---VIDEO---")
     .map(block => block.trim())
@@ -168,6 +141,30 @@ function splitEmbedBlocks(text) {
 
   if (separatedBlocks.length > 1) {
     return separatedBlocks;
+  }
+
+  /*
+    Extract full iframe blocks first.
+    This keeps:
+    <iframe ...></iframe> || 12:45
+    <iframe ...></iframe> || thumb || 12:45
+  */
+  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]*)?/gi);
+
+  if (iframeMatches && iframeMatches.length > 0) {
+    return iframeMatches.map(item => item.trim()).filter(Boolean);
+  }
+
+  /*
+    Fallback: one item per line.
+  */
+  const lines = trimmed
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+
+  if (lines.length > 1) {
+    return lines;
   }
 
   return [trimmed];
@@ -201,19 +198,15 @@ function extractVideoData(input) {
 
     embedPart = pieces[0] || "";
 
-    if (pieces[1]) {
-      if (cleanDuration(pieces[1])) {
-        manualDuration = pieces[1];
-      } else if (isValidLink(pieces[1])) {
-        manualThumbnail = pieces[1];
-      }
-    }
+    for (let i = 1; i < pieces.length; i++) {
+      const piece = pieces[i];
 
-    if (pieces[2]) {
-      if (cleanDuration(pieces[2])) {
-        manualDuration = pieces[2];
-      } else if (!manualThumbnail && isValidLink(pieces[2])) {
-        manualThumbnail = pieces[2];
+      if (!piece) continue;
+
+      if (cleanDuration(piece)) {
+        manualDuration = piece;
+      } else if (isValidLink(piece)) {
+        manualThumbnail = piece;
       }
     }
   }
@@ -345,7 +338,7 @@ function extractVideoData(input) {
   }
 
   /*
-    Duration extraction from embed code itself.
+    Duration extraction from manual value or embed code itself.
   */
 
   if (!duration) {
