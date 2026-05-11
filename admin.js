@@ -14,13 +14,14 @@ addVideosBtn.addEventListener("click", () => {
   const skippedVideos = [];
 
   embedInputs.forEach((input, index) => {
-    const rawEmbed = input.value.trim();
+    const rawInput = input.value.trim();
 
-    if (!rawEmbed) return;
+    if (!rawInput) return;
 
-    const extracted = extractVideoData(rawEmbed);
+    const extracted = extractVideoData(rawInput);
+
     const embed = extracted.embed;
-    const title = isFakeTitle(extracted.title) ? "" : (extracted.title || "");
+    const title = cleanTitle(extracted.title);
     const thumbnail = extracted.thumbnail || "";
 
     if (!isValidLink(embed)) {
@@ -37,7 +38,7 @@ addVideosBtn.addEventListener("click", () => {
   });
 
   if (newVideos.length === 0) {
-    alert("No valid videos found. Paste at least one iframe code or embed link.");
+    alert("No valid videos found. Paste at least one full embed code or embed link.");
     return;
   }
 
@@ -62,6 +63,7 @@ clearAllBtn.addEventListener("click", () => {
   if (!confirmDelete) return;
 
   localStorage.removeItem("videos");
+
   renderVideoList();
 
   alert("All videos deleted.");
@@ -70,57 +72,97 @@ clearAllBtn.addEventListener("click", () => {
 function extractVideoData(input) {
   const trimmed = input.trim();
 
-  let embed = "";
-  let thumbnail = "";
-  let title = "";
+  let embedPart = trimmed;
+  let manualThumbnail = "";
 
-  if (trimmed.toLowerCase().includes("<iframe")) {
-    const iframeSrc = trimmed.match(/<iframe[^>]*src=["']([^"']+)["']/i);
-    if (iframeSrc && iframeSrc[1]) {
-      embed = iframeSrc[1].trim();
-    }
-  } else {
-    embed = trimmed;
+  // Optional format:
+  // FULL EMBED CODE || THUMBNAIL LINK
+  if (trimmed.includes("||")) {
+    const pieces = trimmed.split("||");
+    embedPart = pieces[0].trim();
+    manualThumbnail = pieces[1].trim();
   }
 
-  const titleAttr = trimmed.match(/title=["']([^"']+)["']/i);
+  let embed = "";
+  let thumbnail = manualThumbnail;
+  let title = "";
+
+  // Extract iframe src from full code
+  const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+
+  if (iframeSrc && iframeSrc[1]) {
+    embed = iframeSrc[1].trim();
+  } else if (isValidLink(embedPart)) {
+    embed = embedPart;
+  }
+
+  // Extract title=""
+  const titleAttr = embedPart.match(/title=["']([^"']+)["']/i);
   if (titleAttr && titleAttr[1]) {
     title = titleAttr[1].trim();
   }
 
-  const dataTitle = trimmed.match(/data-title=["']([^"']+)["']/i);
+  // Extract data-title=""
+  const dataTitle = embedPart.match(/data-title=["']([^"']+)["']/i);
   if (!title && dataTitle && dataTitle[1]) {
     title = dataTitle[1].trim();
   }
 
-  const ariaLabel = trimmed.match(/aria-label=["']([^"']+)["']/i);
+  // Extract aria-label=""
+  const ariaLabel = embedPart.match(/aria-label=["']([^"']+)["']/i);
   if (!title && ariaLabel && ariaLabel[1]) {
     title = ariaLabel[1].trim();
   }
 
-  const dataThumb = trimmed.match(/data-thumbnail=["']([^"']+)["']/i);
-  if (dataThumb && dataThumb[1]) {
+  // Extract thumbnail from data-thumbnail=""
+  const dataThumb = embedPart.match(/data-thumbnail=["']([^"']+)["']/i);
+  if (!thumbnail && dataThumb && dataThumb[1]) {
     thumbnail = dataThumb[1].trim();
   }
 
-  const posterThumb = trimmed.match(/poster=["']([^"']+)["']/i);
+  // Extract thumbnail from poster=""
+  const posterThumb = embedPart.match(/poster=["']([^"']+)["']/i);
   if (!thumbnail && posterThumb && posterThumb[1]) {
     thumbnail = posterThumb[1].trim();
   }
 
-  const imgThumb = trimmed.match(/<img[^>]*src=["']([^"']+)["']/i);
-  if (!thumbnail && imgThumb && imgThumb[1]) {
-    thumbnail = imgThumb[1].trim();
-  }
-
-  const thumbAttr = trimmed.match(/thumbnail=["']([^"']+)["']/i);
+  // Extract thumbnail from thumbnail=""
+  const thumbAttr = embedPart.match(/thumbnail=["']([^"']+)["']/i);
   if (!thumbnail && thumbAttr && thumbAttr[1]) {
     thumbnail = thumbAttr[1].trim();
   }
 
-  const imageAttr = trimmed.match(/image=["']([^"']+)["']/i);
+  // Extract thumbnail from image=""
+  const imageAttr = embedPart.match(/image=["']([^"']+)["']/i);
   if (!thumbnail && imageAttr && imageAttr[1]) {
     thumbnail = imageAttr[1].trim();
+  }
+
+  // Extract thumbnail from data-src=""
+  const dataSrc = embedPart.match(/data-src=["']([^"']+)["']/i);
+  if (!thumbnail && dataSrc && dataSrc[1] && isImageLink(dataSrc[1])) {
+    thumbnail = dataSrc[1].trim();
+  }
+
+  // Extract thumbnail from img src=""
+  const imgThumb = embedPart.match(/<img[^>]*src=["']([^"']+)["']/i);
+  if (!thumbnail && imgThumb && imgThumb[1]) {
+    thumbnail = imgThumb[1].trim();
+  }
+
+  // Extract thumbnail from style background-image: url(...)
+  const backgroundThumb = embedPart.match(/background-image:\s*url\(["']?([^"')]+)["']?\)/i);
+  if (!thumbnail && backgroundThumb && backgroundThumb[1]) {
+    thumbnail = backgroundThumb[1].trim();
+  }
+
+  // Last fallback: find first image-looking URL in the full code
+  if (!thumbnail) {
+    const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
+
+    if (imageUrl && imageUrl[0]) {
+      thumbnail = imageUrl[0].trim();
+    }
   }
 
   return {
@@ -128,6 +170,37 @@ function extractVideoData(input) {
     thumbnail,
     title
   };
+}
+
+function cleanTitle(title) {
+  if (!title) return "";
+
+  const clean = String(title).trim();
+
+  if (!clean) return "";
+
+  const lower = clean.toLowerCase();
+
+  // Remove fake/default titles
+  if (
+    lower === "untitled video" ||
+    lower.startsWith("untitled video ") ||
+    /^video\s*\d+$/i.test(clean)
+  ) {
+    return "";
+  }
+
+  // Do not use links as titles
+  if (isValidLink(clean)) {
+    return "";
+  }
+
+  // Do not use iframe/code pieces as titles
+  if (clean.includes("<iframe") || clean.includes("</iframe>")) {
+    return "";
+  }
+
+  return clean;
 }
 
 function getVideos() {
@@ -142,25 +215,15 @@ function isValidLink(link) {
   return link.startsWith("http://") || link.startsWith("https://");
 }
 
-function isFakeTitle(title) {
-  if (!title) return false;
-
-  const clean = String(title).trim().toLowerCase();
-
-  return (
-    clean === "untitled video" ||
-    clean.startsWith("untitled video ") ||
-    /^video\s*\d+$/i.test(clean)
-  );
+function isImageLink(link) {
+  return /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(link);
 }
 
 function renderVideoList() {
   let videos = getVideos();
 
   videos = videos.map((video) => {
-    if (isFakeTitle(video.title)) {
-      video.title = "";
-    }
+    video.title = cleanTitle(video.title);
     return video;
   });
 
@@ -180,9 +243,7 @@ function renderVideoList() {
     item.className = "admin-video-item";
 
     item.innerHTML = `
-      <strong>${video.title ? escapeHTML(video.title) : "No title"}</strong>
-      <p class="admin-help">Embed: ${escapeHTML(video.embed)}</p>
-      <p class="admin-help">Thumbnail: ${video.thumbnail ? escapeHTML(video.thumbnail) : "No thumbnail found"}</p>
+      <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
       <button class="delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
     `;
 
@@ -199,8 +260,11 @@ function renderVideoList() {
 
 function deleteVideo(id) {
   let videos = getVideos();
+
   videos = videos.filter((video) => video.id !== id);
+
   saveVideos(videos);
+
   renderVideoList();
 }
 
