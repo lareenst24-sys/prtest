@@ -130,8 +130,6 @@ clearAllBtn.addEventListener("click", () => {
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
-  // Best for big multi-line embed codes:
-  // Separate each video with ---VIDEO---
   const separatedBlocks = trimmed
     .split("---VIDEO---")
     .map(block => block.trim())
@@ -141,9 +139,6 @@ function splitEmbedBlocks(text) {
     return separatedBlocks;
   }
 
-  // Best normal way:
-  // paste one FULL embed code per line.
-  // This keeps thumbnail/title/duration data outside the iframe.
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -153,7 +148,6 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  // Last fallback only.
   const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
@@ -171,19 +165,11 @@ function extractVideoData(input) {
   let manualDuration = "";
 
   /*
-    Supported formats:
-
-    Full embed only:
-    <iframe src="https://example.com/embed/123" title="Video"></iframe>
-
-    Full embed + duration:
-    <iframe src="https://example.com/embed/123" title="Video"></iframe> || 12:45
-
-    Full embed + thumbnail:
-    <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg
-
-    Full embed + thumbnail + duration:
-    <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg || 12:45
+    Supported:
+    <iframe src="..."></iframe>
+    <iframe src="..."></iframe> || https://thumbnail.jpg
+    <iframe src="..."></iframe> || 12:45
+    <iframe src="..."></iframe> || https://thumbnail.jpg || 12:45
   */
 
   if (trimmed.includes("||")) {
@@ -219,7 +205,6 @@ function extractVideoData(input) {
 
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
 
-  // Title
   const titleSelectors = [
     "[title]",
     "[data-title]",
@@ -270,7 +255,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Thumbnail
   const imageSelectors = [
     "img[src]",
     "img[data-src]",
@@ -332,35 +316,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Duration
-  if (!duration) {
-    const durationPatterns = [
-      /duration=["']([^"']+)["']/i,
-      /data-duration=["']([^"']+)["']/i,
-      /length=["']([^"']+)["']/i,
-      /data-length=["']([^"']+)["']/i,
-      /time=["']([^"']+)["']/i,
-      /data-time=["']([^"']+)["']/i
-    ];
-
-    for (const pattern of durationPatterns) {
-      const match = embedPart.match(pattern);
-
-      if (match && cleanDuration(match[1])) {
-        duration = cleanDuration(match[1]);
-        break;
-      }
-    }
-  }
-
-  if (!duration) {
-    const durationText = embedPart.match(/\b\d{1,2}:\d{2}(?::\d{2})?\b/);
-
-    if (durationText && durationText[0]) {
-      duration = cleanDuration(durationText[0]);
-    }
-  }
-
   return {
     embed,
     thumbnail,
@@ -406,7 +361,6 @@ function cleanDuration(duration) {
 
   const clean = String(duration).trim();
 
-  // Accepts: 1:23, 12:45, 1:02:33
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
     return clean;
   }
@@ -492,19 +446,38 @@ function renderVideoList() {
       ? `<span class="thumb-ok">Thumbnail found</span>`
       : `<span class="thumb-missing">No thumbnail</span>`;
 
-    const durationStatus = video.duration
-      ? `<span class="thumb-ok">Duration: ${escapeHTML(video.duration)}</span>`
-      : `<span class="thumb-missing">No duration</span>`;
+    const durationValue = video.duration || "";
 
     item.innerHTML = `
-      <label class="video-select-row">
+      <div class="admin-video-main">
         <input type="checkbox" class="video-select-checkbox" value="${escapeHTML(video.id)}">
+
+        <div class="admin-video-preview">
+          <iframe 
+            src="${escapeAttribute(video.embed)}" 
+            title="Video preview"
+            loading="lazy"
+            frameborder="0"
+            allowfullscreen>
+          </iframe>
+        </div>
+
         <div class="admin-video-info">
           <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
           <p class="admin-help">${thumbStatus}</p>
-          <p class="admin-help">${durationStatus}</p>
+
+          <div class="duration-edit-row">
+            <input 
+              type="text" 
+              class="duration-input" 
+              id="duration-${escapeHTML(video.id)}" 
+              value="${escapeAttribute(durationValue)}" 
+              placeholder="Enter duration e.g. 12:45"
+            >
+            <button class="save-duration-btn" onclick="saveDuration('${video.id}')">Save</button>
+          </div>
         </div>
-      </label>
+      </div>
 
       <button class="delete-btn small-delete-btn" onclick="deleteVideo('${video.id}')">Delete</button>
     `;
@@ -518,6 +491,37 @@ function renderVideoList() {
     moreText.textContent = `Showing first 100 results only. Current filter has ${displayVideos.length} videos.`;
     videoList.appendChild(moreText);
   }
+}
+
+function saveDuration(id) {
+  const input = document.getElementById(`duration-${id}`);
+
+  if (!input) return;
+
+  const duration = cleanDuration(input.value);
+
+  if (!duration) {
+    alert("Enter duration like 12:45 or 1:02:33");
+    return;
+  }
+
+  let videos = getVideos();
+
+  videos = videos.map((video) => {
+    if (video.id === id) {
+      return {
+        ...video,
+        duration
+      };
+    }
+
+    return video;
+  });
+
+  saveVideos(videos);
+  renderVideoList();
+
+  alert("Duration saved.");
 }
 
 function deleteVideo(id) {
@@ -534,4 +538,12 @@ function escapeHTML(text) {
   const div = document.createElement("div");
   div.textContent = text || "";
   return div.innerHTML;
+}
+
+function escapeAttribute(text) {
+  return String(text || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
