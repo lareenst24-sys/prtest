@@ -7,8 +7,8 @@ savedVideos = savedVideos.map((video) => {
   return {
     ...video,
     title: cleanTitle(video.title),
-    thumbnail: isValidLink(video.thumbnail) ? video.thumbnail : "",
-    embed: isValidLink(video.embed) ? video.embed : ""
+    thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
+    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : ""
   };
 }).filter((video) => video.embed);
 
@@ -39,35 +39,35 @@ function loadVideos() {
 
     const cleanVideoTitle = cleanTitle(video.title);
 
-    const thumbnailHTML = video.thumbnail
-      ? `
-        <img 
-          src="${escapeAttribute(video.thumbnail)}" 
-          alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
-          class="thumbnail-img"
-          loading="lazy"
-        >
-      `
-      : `
-        <div class="no-thumbnail"></div>
-      `;
-
-    const titleHTML = cleanVideoTitle
-      ? `
-        <div class="video-meta">
-          <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
-        </div>
-      `
-      : "";
-
     card.innerHTML = `
-      <div class="video-thumb">
-        ${thumbnailHTML}
+      <div class="video-thumb" data-video-id="${escapeAttribute(video.id)}">
+        ${getPreviewHTML(video, cleanVideoTitle)}
         <div class="play-preview">▶</div>
       </div>
 
-      ${titleHTML}
+      ${
+        cleanVideoTitle
+          ? `
+            <div class="video-meta">
+              <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
+            </div>
+          `
+          : ""
+      }
     `;
+
+    const img = card.querySelector(".thumbnail-img");
+
+    if (img) {
+      img.addEventListener("error", () => {
+        const thumbBox = card.querySelector(".video-thumb");
+
+        thumbBox.innerHTML = `
+          ${getIframeFallbackHTML(video, cleanVideoTitle)}
+          <div class="play-preview">▶</div>
+        `;
+      });
+    }
 
     card.addEventListener("click", () => {
       window.location.href = `watch.html?id=${encodeURIComponent(video.id)}`;
@@ -77,6 +77,35 @@ function loadVideos() {
   });
 
   currentIndex += videosPerLoad;
+}
+
+function getPreviewHTML(video, cleanVideoTitle) {
+  if (video.thumbnail) {
+    return `
+      <img 
+        src="${escapeAttribute(video.thumbnail)}" 
+        alt="${escapeAttribute(cleanVideoTitle || "Video thumbnail")}" 
+        class="thumbnail-img"
+        loading="lazy"
+      >
+    `;
+  }
+
+  return getIframeFallbackHTML(video, cleanVideoTitle);
+}
+
+function getIframeFallbackHTML(video, cleanVideoTitle) {
+  return `
+    <iframe
+      src="${escapeAttribute(video.embed)}"
+      title="${escapeAttribute(cleanVideoTitle || "Video")}"
+      frameborder="0"
+      loading="lazy"
+      allowfullscreen>
+    </iframe>
+
+    <div class="iframe-click-cover"></div>
+  `;
 }
 
 function createLoadMoreButton() {
@@ -118,7 +147,6 @@ function cleanTitle(title) {
 
   const lower = clean.toLowerCase();
 
-  // Remove fake/default titles
   if (
     lower === "untitled video" ||
     lower.startsWith("untitled video ") ||
@@ -127,12 +155,10 @@ function cleanTitle(title) {
     return "";
   }
 
-  // Remove links as titles
   if (isValidLink(clean)) {
     return "";
   }
 
-  // Remove iframe/code as title
   if (
     clean.includes("<iframe") ||
     clean.includes("</iframe>") ||
@@ -142,6 +168,15 @@ function cleanTitle(title) {
   }
 
   return clean;
+}
+
+function decodeUrl(url) {
+  if (!url) return "";
+
+  return String(url)
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 }
 
 function isValidLink(link) {
