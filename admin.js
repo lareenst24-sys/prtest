@@ -131,9 +131,19 @@ function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
   /*
-    BEST:
-    one video per line:
-    <iframe ...></iframe> || thumb || 12:45
+    Supported examples:
+
+    1)
+    <iframe ...></iframe>
+
+    2)
+    <iframe ...></iframe> || 12:45
+
+    3)
+    <iframe ...></iframe> || https://example.com/thumb.jpg
+
+    4)
+    <iframe ...></iframe> || https://example.com/thumb.jpg || 12:45
   */
 
   const lines = trimmed
@@ -145,20 +155,11 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  /*
-    If many iframes are pasted in one big line.
-  */
-
   const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(\s*\|\|[^\n\r]+)?/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
     return iframeMatches;
   }
-
-  /*
-    For big multi-line embed blocks, use:
-    ---VIDEO---
-  */
 
   const separatedBlocks = trimmed
     .split("---VIDEO---")
@@ -180,19 +181,41 @@ function extractVideoData(input) {
   let manualDuration = "";
 
   /*
-    Format:
-    FULL EMBED CODE || THUMBNAIL LINK || DURATION
+    Supported formats:
 
-    Example:
-    <iframe src="https://example.com/embed/123" title="Video"></iframe> || https://example.com/thumb.jpg || 12:45
+    iframe only:
+    <iframe src="https://example.com/embed/123"></iframe>
+
+    iframe + duration:
+    <iframe src="https://example.com/embed/123"></iframe> || 12:45
+
+    iframe + thumbnail:
+    <iframe src="https://example.com/embed/123"></iframe> || https://example.com/thumb.jpg
+
+    iframe + thumbnail + duration:
+    <iframe src="https://example.com/embed/123"></iframe> || https://example.com/thumb.jpg || 12:45
   */
 
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||").map(piece => piece.trim());
 
     embedPart = pieces[0] || "";
-    manualThumbnail = pieces[1] || "";
-    manualDuration = pieces[2] || "";
+
+    if (pieces[1]) {
+      if (cleanDuration(pieces[1])) {
+        manualDuration = pieces[1];
+      } else if (isValidLink(pieces[1])) {
+        manualThumbnail = pieces[1];
+      }
+    }
+
+    if (pieces[2]) {
+      if (cleanDuration(pieces[2])) {
+        manualDuration = pieces[2];
+      } else if (!manualThumbnail && isValidLink(pieces[2])) {
+        manualThumbnail = pieces[2];
+      }
+    }
   }
 
   let embed = "";
@@ -322,7 +345,7 @@ function extractVideoData(input) {
   }
 
   /*
-    Duration extraction
+    Duration extraction from embed code itself.
   */
 
   if (!duration) {
@@ -398,7 +421,7 @@ function cleanDuration(duration) {
 
   const clean = String(duration).trim();
 
-  // 1:23, 12:45, 1:02:33
+  // Accepts: 1:23, 12:45, 1:02:33
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
     return clean;
   }
