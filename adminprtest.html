@@ -59,8 +59,15 @@ Optional thumbnail format:
             <p id="videoCountText" class="admin-help">0 videos saved</p>
           </div>
 
-          <button id="clearAllBtn" class="delete-btn">Delete All</button>
+          <div class="admin-actions">
+            <button id="showAllBtn">Show All</button>
+            <button id="showMissingBtn">Missing Thumbnails</button>
+            <button id="deleteSelectedBtn" class="delete-btn">Delete Selected</button>
+            <button id="clearAllBtn" class="delete-btn">Delete All</button>
+          </div>
         </div>
+
+        <p id="filterStatusText" class="admin-help">Showing all videos</p>
 
         <div id="videoList"></div>
       </div>
