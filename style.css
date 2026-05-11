@@ -6,7 +6,7 @@
 }
 
 body {
-  background: #050505;
+  background: #0f0f0f;
   color: #ffffff;
 }
 
@@ -14,29 +14,29 @@ body {
 
 .navbar {
   width: 100%;
-  padding: 18px 6%;
+  padding: 14px 2.5%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #000000;
-  border-bottom: 1px solid #222;
+  background: #0f0f0f;
+  border-bottom: 1px solid #232323;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 20;
 }
 
 .logo {
   font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 nav a {
   color: #ffffff;
   text-decoration: none;
-  margin-left: 24px;
-  font-size: 15px;
-  opacity: 0.8;
+  margin-left: 20px;
+  font-size: 14px;
+  opacity: 0.88;
 }
 
 nav a:hover {
@@ -46,62 +46,39 @@ nav a:hover {
 /* HOME PAGE */
 
 .content {
-  padding: 38px 6%;
+  padding: 24px 2.5% 40px;
   min-height: 80vh;
 }
 
 .content h2 {
-  font-size: 30px;
-  margin-bottom: 24px;
+  font-size: 26px;
+  margin-bottom: 20px;
+  font-weight: 700;
 }
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 26px 16px;
 }
 
 .video-card {
-  background: #111111;
-  border: 1px solid #222;
-  border-radius: 18px;
-  overflow: hidden;
-  padding-bottom: 16px;
-  transition: 0.25s ease;
   cursor: pointer;
 }
 
-.video-card:hover {
-  transform: translateY(-5px);
-  border-color: #555;
-}
-
-.embed-box {
+.video-thumb {
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #000000;
+  border-radius: 14px;
   overflow: hidden;
-}
-
-.preview-box {
+  background: #1a1a1a;
   position: relative;
 }
 
-.preview-box iframe {
+.thumb-wrap {
   width: 100%;
   height: 100%;
-  border: 0;
-  display: block;
-  pointer-events: none;
-}
-
-.iframe-click-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
 }
 
 .thumbnail-img {
@@ -109,54 +86,58 @@ nav a:hover {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: 0.25s ease;
+  transition: transform 0.2s ease;
 }
 
 .video-card:hover .thumbnail-img {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
-.thumbnail-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.22);
+.no-thumb-wrap {
+  background: linear-gradient(180deg, #202020, #121212);
 }
 
-.play-preview {
-  width: 58px;
-  height: 58px;
-  background: #ffffff;
-  color: #000000;
-  border-radius: 50%;
+.no-thumbnail {
+  width: 100%;
+  height: 100%;
+  color: #d0d0d0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
-  padding-left: 4px;
-  z-index: 4;
+  font-size: 15px;
 }
 
-.video-card h3 {
-  font-size: 18px;
-  margin: 14px 14px 6px;
+.play-preview {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.78);
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  padding-left: 3px;
+  z-index: 2;
+}
+
+.video-meta {
+  padding-top: 10px;
+}
+
+.video-title {
+  font-size: 15px;
   line-height: 1.35;
-}
-
-.video-card p {
-  color: #999999;
-  font-size: 14px;
-  margin: 0 14px;
-}
-
-.views {
-  color: #777777;
-  font-size: 13px;
-  margin: 8px 14px 0;
+  font-weight: 600;
+  color: #f1f1f1;
 }
 
 .empty-message {
-  color: #777777;
+  color: #9c9c9c;
+  font-size: 14px;
 }
 
 /* LOAD MORE */
@@ -167,24 +148,26 @@ nav a:hover {
   margin-top: 34px;
 }
 
-.load-more-btn {
+.load-more-btn,
+button {
   background: #ffffff;
   color: #000000;
   border: none;
   border-radius: 999px;
-  padding: 14px 28px;
-  font-weight: bold;
+  padding: 12px 22px;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.load-more-btn:hover {
-  background: #dddddd;
+.load-more-btn:hover,
+button:hover {
+  background: #e3e3e3;
 }
 
 /* WATCH PAGE */
 
 .watch-page {
-  padding: 40px 6%;
+  padding: 24px 2.5% 40px;
   min-height: 80vh;
 }
 
@@ -193,9 +176,8 @@ nav a:hover {
   max-width: 1100px;
   aspect-ratio: 16 / 9;
   background: #000000;
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #222;
 }
 
 .watch-player iframe {
@@ -207,29 +189,26 @@ nav a:hover {
 
 .watch-info {
   max-width: 1100px;
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .watch-info h1 {
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-
-.watch-info p {
-  color: #999999;
-  margin-bottom: 6px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .back-link {
   color: #ffffff;
   display: inline-block;
   margin-top: 16px;
+  text-decoration: none;
 }
 
 /* ADMIN PAGE */
 
 .admin-page {
-  padding: 36px 6%;
+  padding: 28px 2.5% 40px;
   min-height: 80vh;
   display: flex;
   justify-content: center;
@@ -237,96 +216,89 @@ nav a:hover {
 
 .admin-box {
   width: 100%;
-  max-width: 860px;
-  background: #101010;
-  border: 1px solid #242424;
-  border-radius: 22px;
-  padding: 28px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  max-width: 900px;
+  background: #161616;
+  border: 1px solid #272727;
+  border-radius: 20px;
+  padding: 24px;
 }
 
 .admin-header {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .admin-header h1 {
-  font-size: 34px;
+  font-size: 30px;
   margin-bottom: 8px;
 }
 
 .admin-header p {
-  color: #aaa;
+  color: #aaaaaa;
   line-height: 1.5;
 }
 
-.admin-section h2 {
-  font-size: 24px;
-  margin-bottom: 16px;
-}
-
-.admin-box label {
+.admin-section label {
   display: block;
-  color: #cccccc;
+  color: #d1d1d1;
   font-size: 14px;
   margin-bottom: 8px;
+  margin-top: 12px;
 }
 
 .admin-box input,
 .admin-box textarea {
   width: 100%;
-  background: #050505;
+  background: #0f0f0f;
   color: #ffffff;
-  border: 1px solid #333;
-  border-radius: 14px;
+  border: 1px solid #303030;
+  border-radius: 12px;
   padding: 14px;
-  margin-bottom: 16px;
-  font-size: 15px;
+  margin-bottom: 8px;
+  font-size: 14px;
   outline: none;
 }
 
 .admin-box input:focus,
 .admin-box textarea:focus {
-  border-color: #777;
+  border-color: #6f6f6f;
 }
 
 .admin-box textarea {
-  min-height: 135px;
+  min-height: 110px;
   resize: vertical;
-}
-
-button {
-  background: #ffffff;
-  color: #000000;
-  border: none;
-  border-radius: 999px;
-  padding: 12px 22px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-bottom: 16px;
-}
-
-button:hover {
-  background: #dddddd;
 }
 
 .admin-divider {
   border: none;
   border-top: 1px solid #2a2a2a;
-  margin: 28px 0;
-}
-
-.admin-help {
-  color: #999999;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-bottom: 14px;
+  margin: 24px 0;
 }
 
 .saved-header {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
   align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-help {
+  color: #9d9d9d;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.admin-video-item {
+  border-top: 1px solid #262626;
+  padding: 14px 0;
+}
+
+.admin-video-item strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
 }
 
 .delete-btn {
@@ -335,36 +307,17 @@ button:hover {
 }
 
 .delete-btn:hover {
-  background: #ff2f2f;
-}
-
-.admin-video-item {
-  border-top: 1px solid #242424;
-  padding: 16px 0;
-}
-
-.admin-video-item strong {
-  display: block;
-  margin-bottom: 6px;
-}
-
-.admin-video-item p {
-  color: #999999;
-  margin-bottom: 10px;
-  word-break: break-all;
-}
-
-.hidden {
-  display: none;
+  background: #e43737;
 }
 
 /* FOOTER */
 
 footer {
-  padding: 30px 6%;
-  color: #777777;
-  border-top: 1px solid #222;
+  padding: 24px 2.5%;
+  color: #7d7d7d;
+  border-top: 1px solid #232323;
   text-align: center;
+  font-size: 14px;
 }
 
 /* MOBILE */
@@ -372,56 +325,42 @@ footer {
 @media (max-width: 700px) {
   .navbar {
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
   }
 
   nav a {
     margin: 0 8px;
   }
 
-  .content {
-    padding: 30px 5%;
+  .content,
+  .watch-page,
+  .admin-page {
+    padding-left: 4%;
+    padding-right: 4%;
   }
 
   .content h2 {
-    font-size: 26px;
-  }
-
-  .watch-page {
-    padding: 25px 5%;
-  }
-
-  .watch-info h1 {
     font-size: 24px;
   }
 
-  .admin-page {
-    padding: 28px 5%;
+  .video-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .watch-info h1 {
+    font-size: 21px;
   }
 
   .admin-box {
-    padding: 20px;
-    border-radius: 18px;
+    padding: 18px;
   }
 
   .admin-header h1 {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .saved-header {
     flex-direction: column;
   }
-}
-.multi-video-box {
-  background: #080808;
-  border: 1px solid #242424;
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 20px;
-}
-
-.multi-video-box h3 {
-  font-size: 18px;
-  margin-bottom: 14px;
-  color: #ffffff;
 }
