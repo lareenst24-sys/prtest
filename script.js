@@ -56,21 +56,11 @@ function loadVideos() {
       ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
       : "";
 
-    const titleHTML = cleanVideoTitle
-      ? `
-        <div class="video-meta">
-          <h3 class="video-title">${escapeHTML(cleanVideoTitle)}</h3>
-        </div>
-      `
-      : "";
-
     card.innerHTML = `
       <div class="video-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
         ${thumbnailHTML}
         ${durationHTML}
       </div>
-
-      ${titleHTML}
     `;
 
     card.addEventListener("click", () => {
