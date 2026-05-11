@@ -1,4 +1,4 @@
-const embedInputs = document.querySelectorAll(".embedInput");
+const bulkEmbedInput = document.getElementById("bulkEmbedInput");
 
 const addVideosBtn = document.getElementById("addVideosBtn");
 
@@ -6,15 +6,26 @@ const videoList = document.getElementById("videoList");
 const videoCountText = document.getElementById("videoCountText");
 const clearAllBtn = document.getElementById("clearAllBtn");
 
+const MAX_UPLOAD_AT_ONCE = 100;
+
 renderVideoList();
 
 addVideosBtn.addEventListener("click", () => {
+  const rawText = bulkEmbedInput.value.trim();
+
+  if (!rawText) {
+    alert("Paste at least one iframe code or embed link.");
+    return;
+  }
+
+  const blocks = splitEmbedBlocks(rawText).slice(0, MAX_UPLOAD_AT_ONCE);
+
   const videos = getVideos();
   const newVideos = [];
   const skippedVideos = [];
 
-  embedInputs.forEach((input, index) => {
-    const rawInput = input.value.trim();
+  blocks.forEach((block, index) => {
+    const rawInput = block.trim();
 
     if (!rawInput) return;
 
@@ -34,20 +45,24 @@ addVideosBtn.addEventListener("click", () => {
   });
 
   if (newVideos.length === 0) {
-    alert("No valid videos found. Paste at least one full embed code or embed link.");
+    alert("No valid videos found. Make sure each embed has a valid iframe src or https link.");
     return;
   }
 
   saveVideos([...newVideos, ...videos]);
 
-  embedInputs.forEach(input => input.value = "");
+  bulkEmbedInput.value = "";
 
   renderVideoList();
 
   let message = `${newVideos.length} video(s) added successfully.`;
 
+  if (blocks.length >= MAX_UPLOAD_AT_ONCE) {
+    message += `\nOnly the first ${MAX_UPLOAD_AT_ONCE} videos were processed.`;
+  }
+
   if (skippedVideos.length > 0) {
-    message += `\nSkipped input(s): ${skippedVideos.join(", ")}`;
+    message += `\nSkipped item(s): ${skippedVideos.join(", ")}`;
   }
 
   alert(message);
@@ -63,13 +78,47 @@ clearAllBtn.addEventListener("click", () => {
   alert("All videos deleted.");
 });
 
+function splitEmbedBlocks(text) {
+  const trimmed = text.trim();
+
+  // Best case: one full embed code per line
+  const lines = trimmed
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+
+  if (lines.length > 1) {
+    return lines;
+  }
+
+  // If user pasted many iframes in one big block, extract each iframe
+  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>/gi);
+
+  if (iframeMatches && iframeMatches.length > 1) {
+    return iframeMatches;
+  }
+
+  // If separated by blank gaps
+  const paragraphBlocks = trimmed
+    .split(/\n\s*\n/)
+    .map(block => block.trim())
+    .filter(block => block.length > 0);
+
+  if (paragraphBlocks.length > 1) {
+    return paragraphBlocks;
+  }
+
+  // Single item
+  return [trimmed];
+}
+
 function extractVideoData(input) {
   const trimmed = input.trim();
 
   let embedPart = trimmed;
   let manualThumbnail = "";
 
-  // Optional manual format:
+  // Optional format:
   // FULL EMBED CODE || THUMBNAIL LINK
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||");
@@ -81,8 +130,9 @@ function extractVideoData(input) {
   let thumbnail = manualThumbnail;
   let title = "";
 
-  // Extract iframe src
+  // Extract iframe src from full code
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+
   if (iframeSrc && iframeSrc[1]) {
     embed = iframeSrc[1].trim();
   } else if (isValidLink(embedPart)) {
@@ -239,7 +289,13 @@ function cleanTitle(title) {
 
   if (isValidLink(clean)) return "";
 
-  if (clean.includes("<iframe") || clean.includes("</iframe>")) return "";
+  if (
+    clean.includes("<iframe") ||
+    clean.includes("</iframe>") ||
+    clean.includes("src=")
+  ) {
+    return "";
+  }
 
   return clean;
 }
@@ -253,7 +309,10 @@ function saveVideos(videos) {
 }
 
 function isValidLink(link) {
-  return typeof link === "string" && (link.startsWith("http://") || link.startsWith("https://"));
+  return typeof link === "string" && (
+    link.startsWith("http://") ||
+    link.startsWith("https://")
+  );
 }
 
 function renderVideoList() {
@@ -298,8 +357,11 @@ function renderVideoList() {
 
 function deleteVideo(id) {
   let videos = getVideos();
+
   videos = videos.filter((video) => video.id !== id);
+
   saveVideos(videos);
+
   renderVideoList();
 }
 
