@@ -38,7 +38,10 @@ if (!currentVideo) {
             <iframe 
               src="${escapeAttribute(currentVideo.embed)}" 
               title="${escapeAttribute(currentVideo.title || "Video")}" 
-              frameborder="0" 
+              frameborder="0"
+              sandbox="allow-scripts allow-same-origin allow-presentation"
+              allow="fullscreen; picture-in-picture; encrypted-media"
+              referrerpolicy="no-referrer"
               allowfullscreen>
             </iframe>
           </div>
