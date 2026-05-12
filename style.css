@@ -748,10 +748,13 @@ footer {
 }
 
 @media (max-width: 700px) {
-  .more-videos-btn {
-    right: 55px !important;
-    bottom: 8px !important;
-  }
+.more-videos-btn {
+  right: 58px !important;
+  bottom: 6px !important;
+  top: auto !important;
+  position: absolute !important;
+  z-index: 50 !important;
+}
 
   .pause-style-overlay {
     height: 32% !important;
