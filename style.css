@@ -651,23 +651,366 @@ footer {
 }
 
 @media (max-width: 700px) {
-  .overlay-video-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+/* =========================
+   WATCH PAGE VIDEO SUGGESTION DRAWER
+========================= */
+
+.watch-player-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.more-videos-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 8;
+  background: rgba(0, 0, 0, 0.78);
+  color: #ffffff;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.more-videos-btn:hover {
+  background: rgba(20, 20, 20, 0.95);
+}
+
+/* small pull-up style overlay, not full screen */
+.pause-style-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  min-height: 135px;
+  max-height: 230px;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 10;
+  display: none;
+  padding: 12px;
+  overflow: hidden;
+  border-radius: 0 0 16px 16px;
+  backdrop-filter: blur(8px);
+}
+
+.pause-style-overlay.active {
+  display: block;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.overlay-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.overlay-header button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* horizontal scroll row */
+.overlay-video-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+}
+
+.overlay-video-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overlay-video-grid::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 999px;
+}
+
+.overlay-video-grid::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 999px;
+}
+
+.overlay-video-card {
+  display: block;
+  text-decoration: none;
+  flex: 0 0 170px;
+  scroll-snap-align: start;
+}
+
+.overlay-video-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #181818;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.overlay-video-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Also Watch section under player */
+
+.also-watch-section {
+  margin-top: 34px;
+}
+
+.also-watch-section h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.also-watch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 22px 14px;
+}
+
+.also-watch-card {
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.also-watch-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #181818;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.also-watch-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.also-watch-card h3 {
+  font-size: 14px;
+  line-height: 1.35;
+  margin-top: 8px;
+  color: #f1f1f1;
+}
+
+.thumbnail-failed {
+  background: #181818;
+}
+
+@media (max-width: 700px) {
+/* =========================
+   WATCH PAGE VIDEO SUGGESTION DRAWER
+========================= */
+
+.watch-player-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.more-videos-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 8;
+  background: rgba(0, 0, 0, 0.78);
+  color: #ffffff;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.more-videos-btn:hover {
+  background: rgba(20, 20, 20, 0.95);
+}
+
+/* small pull-up style overlay, not full screen */
+.pause-style-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  min-height: 135px;
+  max-height: 230px;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 10;
+  display: none;
+  padding: 12px;
+  overflow: hidden;
+  border-radius: 0 0 16px 16px;
+  backdrop-filter: blur(8px);
+}
+
+.pause-style-overlay.active {
+  display: block;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.overlay-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.overlay-header button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* horizontal scroll row */
+.overlay-video-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+}
+
+.overlay-video-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overlay-video-grid::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 999px;
+}
+
+.overlay-video-grid::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 999px;
+}
+
+.overlay-video-card {
+  display: block;
+  text-decoration: none;
+  flex: 0 0 170px;
+  scroll-snap-align: start;
+}
+
+.overlay-video-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #181818;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.overlay-video-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Also Watch section under player */
+
+.also-watch-section {
+  margin-top: 34px;
+}
+
+.also-watch-section h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.also-watch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 22px 14px;
+}
+
+.also-watch-card {
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.also-watch-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #181818;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.also-watch-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.also-watch-card h3 {
+  font-size: 14px;
+  line-height: 1.35;
+  margin-top: 8px;
+  color: #f1f1f1;
+}
+
+.thumbnail-failed {
+  background: #181818;
+}
+
+@media (max-width: 700px) {
+
+  /* =========================
+   WATCH PAGE VIDEO SUGGESTION DRAWER
+========================= */ 
+  
+  .pause-style-overlay {
+    height: 34%;
+    min-height: 120px;
+    max-height: 190px;
+    padding: 10px;
   }
 
-  .pause-style-overlay {
-    padding: 12px;
+  .overlay-video-card {
+    flex: 0 0 135px;
+  }
+
+  .overlay-header h3 {
+    font-size: 13px;
+  }
+
+  .more-videos-btn {
+    right: 8px;
+    bottom: 8px;
+    font-size: 12px;
+    padding: 7px 11px;
   }
 
   .also-watch-grid {
     grid-template-columns: 1fr;
-  }
-
-  .more-videos-btn {
-    top: 8px;
-    right: 8px;
-    font-size: 12px;
-    padding: 8px 12px;
   }
 }
