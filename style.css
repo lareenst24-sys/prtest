@@ -523,3 +523,151 @@ footer {
     max-width: 100%;
   }
 }
+.watch-layout {
+  width: 100%;
+}
+
+.watch-main {
+  width: 100%;
+  max-width: 1100px;
+}
+
+.watch-player-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.more-videos-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 8;
+  background: rgba(0, 0, 0, 0.78);
+  color: #ffffff;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.more-videos-btn:hover {
+  background: rgba(20, 20, 20, 0.95);
+}
+
+.pause-style-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 10;
+  display: none;
+  padding: 18px;
+  overflow: auto;
+}
+
+.pause-style-overlay.active {
+  display: block;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.overlay-header h3 {
+  font-size: 18px;
+}
+
+.overlay-header button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.overlay-video-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.overlay-video-card {
+  display: block;
+  text-decoration: none;
+}
+
+.overlay-video-thumb,
+.also-watch-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #181818;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.overlay-video-thumb img,
+.also-watch-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Also Watch */
+
+.also-watch-section {
+  margin-top: 34px;
+}
+
+.also-watch-section h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.also-watch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 22px 14px;
+}
+
+.also-watch-card {
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.also-watch-card h3 {
+  font-size: 14px;
+  line-height: 1.35;
+  margin-top: 8px;
+  color: #f1f1f1;
+}
+
+.thumbnail-failed {
+  background: #181818;
+}
+
+@media (max-width: 700px) {
+  .overlay-video-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .pause-style-overlay {
+    padding: 12px;
+  }
+
+  .also-watch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .more-videos-btn {
+    top: 8px;
+    right: 8px;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
