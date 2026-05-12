@@ -92,25 +92,18 @@ nav a:hover {
   transform: scale(1.03);
 }
 
-.thumbnail-failed {
-  background: #181818;
-}
-
+.thumbnail-failed,
 .no-thumbnail {
   width: 100%;
   height: 100%;
   background: #181818;
 }
 
-.thumbnail-loading {
-  display: none !important;
-}
-
+.thumbnail-loading,
 .play-preview {
   display: none !important;
 }
 
-/* Duration badge on thumbnail */
 .duration-badge {
   position: absolute;
   right: 8px;
@@ -175,6 +168,21 @@ button:hover {
   min-height: 80vh;
 }
 
+.watch-layout {
+  width: 100%;
+}
+
+.watch-main {
+  width: 100%;
+  max-width: 1100px;
+}
+
+.watch-player-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+}
+
 .watch-player {
   width: 100%;
   max-width: 1100px;
@@ -207,6 +215,165 @@ button:hover {
   display: inline-block;
   margin-top: 16px;
   text-decoration: none;
+}
+
+/* =========================
+   MORE VIDEOS DRAWER
+========================= */
+
+.more-videos-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  top: auto;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.78);
+  color: #ffffff;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.more-videos-btn:hover {
+  background: rgba(20, 20, 20, 0.95);
+}
+
+/* Small pull-up drawer inside the video */
+.pause-style-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  height: 36%;
+  min-height: 125px;
+  max-height: 220px;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 30;
+  display: none;
+  padding: 10px 12px;
+  overflow: hidden;
+  border-radius: 0 0 16px 16px;
+  backdrop-filter: blur(8px);
+}
+
+.pause-style-overlay.active {
+  display: block;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.overlay-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.overlay-header button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.overlay-video-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+}
+
+.overlay-video-grid::-webkit-scrollbar {
+  height: 5px;
+}
+
+.overlay-video-grid::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 999px;
+}
+
+.overlay-video-grid::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 999px;
+}
+
+.overlay-video-card {
+  display: block;
+  text-decoration: none;
+  flex: 0 0 165px;
+  width: 165px;
+  scroll-snap-align: start;
+}
+
+.overlay-video-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #181818;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.overlay-video-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* =========================
+   ALSO WATCH
+========================= */
+
+.also-watch-section {
+  margin-top: 34px;
+}
+
+.also-watch-section h2 {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.also-watch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 22px 14px;
+}
+
+.also-watch-card {
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.also-watch-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #181818;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.also-watch-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.also-watch-card h3 {
+  font-size: 14px;
+  line-height: 1.35;
+  margin-top: 8px;
+  color: #f1f1f1;
 }
 
 /* =========================
@@ -274,7 +441,6 @@ button:hover {
   resize: vertical;
 }
 
-/* Big upload code box */
 .big-upload-box {
   min-height: 360px !important;
   max-height: 360px;
@@ -336,6 +502,30 @@ button:hover {
   align-items: center;
 }
 
+.admin-video-main {
+  display: grid;
+  grid-template-columns: 22px 180px 1fr;
+  gap: 14px;
+  align-items: start;
+  flex: 1;
+}
+
+.admin-video-preview {
+  width: 180px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+.admin-video-preview iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
 .video-select-row {
   display: flex;
   align-items: flex-start;
@@ -361,6 +551,22 @@ button:hover {
 
 .thumb-missing {
   color: #ff6868;
+}
+
+.duration-edit-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.duration-input {
+  max-width: 180px;
+  margin-bottom: 0 !important;
+}
+
+.save-duration-btn {
+  padding: 10px 16px;
+  margin-bottom: 0;
 }
 
 .delete-btn {
@@ -423,6 +629,33 @@ footer {
     font-size: 21px;
   }
 
+  .more-videos-btn {
+    right: 8px;
+    bottom: 8px;
+    font-size: 12px;
+    padding: 7px 11px;
+  }
+
+  .pause-style-overlay {
+    height: 34%;
+    min-height: 110px;
+    max-height: 175px;
+    padding: 9px;
+  }
+
+  .overlay-video-card {
+    flex: 0 0 128px;
+    width: 128px;
+  }
+
+  .overlay-header h3 {
+    font-size: 13px;
+  }
+
+  .also-watch-grid {
+    grid-template-columns: 1fr;
+  }
+
   .admin-box {
     padding: 18px;
   }
@@ -448,64 +681,6 @@ footer {
     flex-direction: column;
   }
 
-  .small-delete-btn {
-    width: 100%;
-  }
-}
-.admin-video-main {
-  display: grid;
-  grid-template-columns: 22px 180px 1fr;
-  gap: 14px;
-  align-items: start;
-  flex: 1;
-}
-
-.admin-video-preview {
-  width: 180px;
-  aspect-ratio: 16 / 9;
-  background: #000;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #333;
-}
-
-.admin-video-preview iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-}
-
-.duration-edit-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.duration-input {
-  max-width: 180px;
-  margin-bottom: 0 !important;
-}
-
-.save-duration-btn {
-  padding: 10px 16px;
-  margin-bottom: 0;
-}
-
-.duration-badge {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #ffffff;
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  z-index: 5;
-}
-
-@media (max-width: 700px) {
   .admin-video-main {
     grid-template-columns: 22px 1fr;
   }
@@ -522,495 +697,8 @@ footer {
   .duration-input {
     max-width: 100%;
   }
-}
-.watch-layout {
-  width: 100%;
-}
 
-.watch-main {
-  width: 100%;
-  max-width: 1100px;
-}
-
-.watch-player-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 1100px;
-}
-
-.more-videos-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 8;
-  background: rgba(0, 0, 0, 0.78);
-  color: #ffffff;
-  padding: 9px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-}
-
-.more-videos-btn:hover {
-  background: rgba(20, 20, 20, 0.95);
-}
-
-.pause-style-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  z-index: 10;
-  display: none;
-  padding: 18px;
-  overflow: auto;
-}
-
-.pause-style-overlay.active {
-  display: block;
-}
-
-.overlay-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.overlay-header h3 {
-  font-size: 18px;
-}
-
-.overlay-header button {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  padding: 0;
-  font-size: 22px;
-  line-height: 1;
-}
-
-.overlay-video-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.overlay-video-card {
-  display: block;
-  text-decoration: none;
-}
-
-.overlay-video-thumb,
-.also-watch-thumb {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #181818;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.overlay-video-thumb img,
-.also-watch-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Also Watch */
-
-.also-watch-section {
-  margin-top: 34px;
-}
-
-.also-watch-section h2 {
-  font-size: 22px;
-  margin-bottom: 16px;
-}
-
-.also-watch-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 22px 14px;
-}
-
-.also-watch-card {
-  text-decoration: none;
-  color: #ffffff;
-}
-
-.also-watch-card h3 {
-  font-size: 14px;
-  line-height: 1.35;
-  margin-top: 8px;
-  color: #f1f1f1;
-}
-
-.thumbnail-failed {
-  background: #181818;
-}
-
-@media (max-width: 700px) {
-/* =========================
-   WATCH PAGE VIDEO SUGGESTION DRAWER
-========================= */
-
-.watch-player-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 1100px;
-}
-
-.more-videos-btn {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 8;
-  background: rgba(0, 0, 0, 0.78);
-  color: #ffffff;
-  padding: 8px 13px;
-  border-radius: 999px;
-  font-size: 13px;
-}
-
-.more-videos-btn:hover {
-  background: rgba(20, 20, 20, 0.95);
-}
-
-/* small pull-up style overlay, not full screen */
-.pause-style-overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 38%;
-  min-height: 135px;
-  max-height: 230px;
-  background: rgba(0, 0, 0, 0.88);
-  z-index: 10;
-  display: none;
-  padding: 12px;
-  overflow: hidden;
-  border-radius: 0 0 16px 16px;
-  backdrop-filter: blur(8px);
-}
-
-.pause-style-overlay.active {
-  display: block;
-}
-
-.overlay-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.overlay-header h3 {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.overlay-header button {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  padding: 0;
-  font-size: 20px;
-  line-height: 1;
-}
-
-/* horizontal scroll row */
-.overlay-video-grid {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
-}
-
-.overlay-video-grid::-webkit-scrollbar {
-  height: 6px;
-}
-
-.overlay-video-grid::-webkit-scrollbar-track {
-  background: #1a1a1a;
-  border-radius: 999px;
-}
-
-.overlay-video-grid::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 999px;
-}
-
-.overlay-video-card {
-  display: block;
-  text-decoration: none;
-  flex: 0 0 170px;
-  scroll-snap-align: start;
-}
-
-.overlay-video-thumb {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #181818;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.overlay-video-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Also Watch section under player */
-
-.also-watch-section {
-  margin-top: 34px;
-}
-
-.also-watch-section h2 {
-  font-size: 22px;
-  margin-bottom: 16px;
-}
-
-.also-watch-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 22px 14px;
-}
-
-.also-watch-card {
-  text-decoration: none;
-  color: #ffffff;
-}
-
-.also-watch-thumb {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #181818;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.also-watch-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.also-watch-card h3 {
-  font-size: 14px;
-  line-height: 1.35;
-  margin-top: 8px;
-  color: #f1f1f1;
-}
-
-.thumbnail-failed {
-  background: #181818;
-}
-
-@media (max-width: 700px) {
-/* =========================
-   WATCH PAGE VIDEO SUGGESTION DRAWER
-========================= */
-
-.watch-player-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 1100px;
-}
-
-.more-videos-btn {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 8;
-  background: rgba(0, 0, 0, 0.78);
-  color: #ffffff;
-  padding: 8px 13px;
-  border-radius: 999px;
-  font-size: 13px;
-}
-
-.more-videos-btn:hover {
-  background: rgba(20, 20, 20, 0.95);
-}
-
-/* small pull-up style overlay, not full screen */
-.pause-style-overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 38%;
-  min-height: 135px;
-  max-height: 230px;
-  background: rgba(0, 0, 0, 0.88);
-  z-index: 10;
-  display: none;
-  padding: 12px;
-  overflow: hidden;
-  border-radius: 0 0 16px 16px;
-  backdrop-filter: blur(8px);
-}
-
-.pause-style-overlay.active {
-  display: block;
-}
-
-.overlay-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.overlay-header h3 {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.overlay-header button {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  padding: 0;
-  font-size: 20px;
-  line-height: 1;
-}
-
-/* horizontal scroll row */
-.overlay-video-grid {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
-}
-
-.overlay-video-grid::-webkit-scrollbar {
-  height: 6px;
-}
-
-.overlay-video-grid::-webkit-scrollbar-track {
-  background: #1a1a1a;
-  border-radius: 999px;
-}
-
-.overlay-video-grid::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 999px;
-}
-
-.overlay-video-card {
-  display: block;
-  text-decoration: none;
-  flex: 0 0 170px;
-  scroll-snap-align: start;
-}
-
-.overlay-video-thumb {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #181818;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.overlay-video-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Also Watch section under player */
-
-.also-watch-section {
-  margin-top: 34px;
-}
-
-.also-watch-section h2 {
-  font-size: 22px;
-  margin-bottom: 16px;
-}
-
-.also-watch-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 22px 14px;
-}
-
-.also-watch-card {
-  text-decoration: none;
-  color: #ffffff;
-}
-
-.also-watch-thumb {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #181818;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.also-watch-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.also-watch-card h3 {
-  font-size: 14px;
-  line-height: 1.35;
-  margin-top: 8px;
-  color: #f1f1f1;
-}
-
-.thumbnail-failed {
-  background: #181818;
-}
-
-@media (max-width: 700px) {
-
-  /* =========================
-   WATCH PAGE VIDEO SUGGESTION DRAWER
-========================= */ 
-  
-  .pause-style-overlay {
-    height: 34%;
-    min-height: 120px;
-    max-height: 190px;
-    padding: 10px;
-  }
-
-  .overlay-video-card {
-    flex: 0 0 135px;
-  }
-
-  .overlay-header h3 {
-    font-size: 13px;
-  }
-
-  .more-videos-btn {
-    right: 8px;
-    bottom: 8px;
-    font-size: 12px;
-    padding: 7px 11px;
-  }
-
-  .also-watch-grid {
-    grid-template-columns: 1fr;
+  .small-delete-btn {
+    width: 100%;
   }
 }
