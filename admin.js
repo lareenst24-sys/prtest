@@ -56,7 +56,7 @@ addVideosBtn.addEventListener("click", () => {
       title: cleanTitle(extracted.title),
       embed: extracted.embed,
       thumbnail: extracted.thumbnail || "",
-      duration: cleanDuration(extracted.duration)
+      duration: ""
     });
   });
 
@@ -144,6 +144,10 @@ clearAllBtn.addEventListener("click", () => {
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
+  /*
+    For large multi-line embed blocks, separate videos with:
+    ---VIDEO---
+  */
   const separatedBlocks = trimmed
     .split("---VIDEO---")
     .map(block => block.trim())
@@ -153,6 +157,10 @@ function splitEmbedBlocks(text) {
     return separatedBlocks;
   }
 
+  /*
+    Best normal format:
+    One FULL embed code per line.
+  */
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -162,6 +170,10 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
+  /*
+    Fallback:
+    If many iframes are pasted in one giant line.
+  */
   const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
@@ -176,14 +188,18 @@ function extractVideoData(input) {
 
   let embedPart = trimmed;
   let manualThumbnail = "";
-  let manualDuration = "";
 
   /*
-    Supported:
-    <iframe src="..."></iframe>
-    <iframe src="..."></iframe> || https://thumbnail.jpg
-    <iframe src="..."></iframe> || 12:45
-    <iframe src="..."></iframe> || https://thumbnail.jpg || 12:45
+    SAFE RULE:
+    From embed code we only extract:
+    - iframe src / video link
+    - thumbnail image link
+    - title
+
+    We DO NOT extract:
+    - duration
+    - random text
+    - extra metadata
   */
 
   if (trimmed.includes("||")) {
@@ -196,10 +212,10 @@ function extractVideoData(input) {
 
       if (!piece) continue;
 
-      if (cleanDuration(piece)) {
-        manualDuration = piece;
-      } else if (isValidLink(piece)) {
+      // Only accept manual thumbnail if it is a real link
+      if (isValidLink(piece)) {
         manualThumbnail = piece;
+        break;
       }
     }
   }
@@ -207,8 +223,8 @@ function extractVideoData(input) {
   let embed = "";
   let thumbnail = manualThumbnail;
   let title = "";
-  let duration = cleanDuration(manualDuration);
 
+  // Extract iframe src only
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
   if (iframeSrc && iframeSrc[1]) {
@@ -219,56 +235,28 @@ function extractVideoData(input) {
 
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
 
-  const titleSelectors = [
-    "[title]",
-    "[data-title]",
-    "[aria-label]",
-    "[alt]",
-    "h1",
-    "h2",
-    "h3",
-    ".title",
-    ".video-title",
-    "a"
-  ];
-
-  for (const selector of titleSelectors) {
-    const element = doc.querySelector(selector);
-    if (!element) continue;
-
-    const possibleTitle =
-      element.getAttribute("title") ||
-      element.getAttribute("data-title") ||
-      element.getAttribute("aria-label") ||
-      element.getAttribute("alt") ||
-      element.textContent;
-
-    const cleaned = cleanTitle(possibleTitle);
-
-    if (cleaned) {
-      title = cleaned;
-      break;
-    }
+  // Extract safe title only from title-like attributes
+  const titleAttr = embedPart.match(/title=["']([^"']+)["']/i);
+  if (titleAttr && titleAttr[1]) {
+    title = cleanTitle(titleAttr[1]);
   }
 
-  if (!title) {
-    const titlePatterns = [
-      /title=["']([^"']+)["']/i,
-      /data-title=["']([^"']+)["']/i,
-      /aria-label=["']([^"']+)["']/i,
-      /alt=["']([^"']+)["']/i
-    ];
-
-    for (const pattern of titlePatterns) {
-      const match = embedPart.match(pattern);
-
-      if (match && cleanTitle(match[1])) {
-        title = cleanTitle(match[1]);
-        break;
-      }
-    }
+  const dataTitle = embedPart.match(/data-title=["']([^"']+)["']/i);
+  if (!title && dataTitle && dataTitle[1]) {
+    title = cleanTitle(dataTitle[1]);
   }
 
+  const ariaLabel = embedPart.match(/aria-label=["']([^"']+)["']/i);
+  if (!title && ariaLabel && ariaLabel[1]) {
+    title = cleanTitle(ariaLabel[1]);
+  }
+
+  const altTitle = embedPart.match(/alt=["']([^"']+)["']/i);
+  if (!title && altTitle && altTitle[1]) {
+    title = cleanTitle(altTitle[1]);
+  }
+
+  // Extract thumbnail from common image/thumbnail attributes only
   const imageSelectors = [
     "img[src]",
     "img[data-src]",
@@ -300,6 +288,7 @@ function extractVideoData(input) {
     }
   }
 
+  // Regex thumbnail fallback
   if (!thumbnail) {
     const thumbPatterns = [
       /data-thumbnail=["']([^"']+)["']/i,
@@ -322,6 +311,7 @@ function extractVideoData(input) {
     }
   }
 
+  // Last fallback: first image-looking URL only
   if (!thumbnail) {
     const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
 
@@ -333,8 +323,7 @@ function extractVideoData(input) {
   return {
     embed,
     thumbnail,
-    title,
-    duration
+    title
   };
 }
 
@@ -362,12 +351,40 @@ function cleanTitle(title) {
   if (
     clean.includes("<iframe") ||
     clean.includes("</iframe>") ||
-    clean.includes("src=")
+    clean.includes("src=") ||
+    clean.includes("https://") ||
+    clean.includes("http://")
   ) {
     return "";
   }
 
   return clean;
+}
+
+function autoFormatDuration(value) {
+  const digits = String(value).replace(/\D/g, "");
+
+  if (!digits) return "";
+
+  // 37 -> 0:37
+  if (digits.length <= 2) {
+    return `0:${digits.padStart(2, "0")}`;
+  }
+
+  // 2337 -> 23:37
+  if (digits.length <= 4) {
+    const minutes = digits.slice(0, -2);
+    const seconds = digits.slice(-2);
+
+    return `${Number(minutes)}:${seconds}`;
+  }
+
+  // 14530 -> 1:45:30
+  const hours = digits.slice(0, -4);
+  const minutes = digits.slice(-4, -2);
+  const seconds = digits.slice(-2);
+
+  return `${Number(hours)}:${minutes}:${seconds}`;
 }
 
 function cleanDuration(duration) {
@@ -380,29 +397,6 @@ function cleanDuration(duration) {
   }
 
   return "";
-}
-
-function autoFormatDuration(value) {
-  const digits = String(value).replace(/\D/g, "");
-
-  if (!digits) return "";
-
-  if (digits.length <= 2) {
-    return `0:${digits.padStart(2, "0")}`;
-  }
-
-  if (digits.length <= 4) {
-    const minutes = digits.slice(0, -2);
-    const seconds = digits.slice(-2);
-
-    return `${Number(minutes)}:${seconds}`;
-  }
-
-  const hours = digits.slice(0, -4);
-  const minutes = digits.slice(-4, -2);
-  const seconds = digits.slice(-2);
-
-  return `${Number(hours)}:${minutes}:${seconds}`;
 }
 
 function decodeText(text) {
@@ -442,10 +436,14 @@ function renderVideoList() {
   let videos = getVideos();
 
   videos = videos.map((video) => {
-    video.title = cleanTitle(video.title);
-    video.duration = cleanDuration(video.duration);
-    return video;
-  });
+    return {
+      ...video,
+      title: cleanTitle(video.title),
+      duration: cleanDuration(video.duration),
+      thumbnail: isValidLink(video.thumbnail) ? decodeText(video.thumbnail) : "",
+      embed: isValidLink(video.embed) ? decodeText(video.embed) : ""
+    };
+  }).filter(video => video.embed);
 
   saveVideos(videos);
 
