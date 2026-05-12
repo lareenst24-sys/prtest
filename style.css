@@ -767,3 +767,43 @@ footer {
     width: 120px !important;
   }
 }
+/* FINAL FORCE FIX — MORE VIDEOS BUTTON POSITION */
+
+button.more-videos-btn {
+  position: absolute !important;
+  right: 52px !important;
+  bottom: 4px !important;
+  top: auto !important;
+  left: auto !important;
+  z-index: 9999 !important;
+}
+
+/* FORCE SMALL BOTTOM DRAWER */
+div.pause-style-overlay {
+  position: absolute !important;
+  inset: auto 0 0 0 !important;
+  width: 100% !important;
+  height: 32% !important;
+  min-height: 105px !important;
+  max-height: 175px !important;
+  display: none !important;
+  overflow: hidden !important;
+  z-index: 9998 !important;
+}
+
+div.pause-style-overlay.active {
+  display: block !important;
+}
+
+div.overlay-video-grid {
+  display: flex !important;
+  grid-template-columns: none !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  gap: 10px !important;
+}
+
+a.overlay-video-card {
+  flex: 0 0 130px !important;
+  width: 130px !important;
+}
