@@ -1,5 +1,5 @@
-const siteVideos = [
-  // Your public videos will go here.
+window.siteVideos = [
+  // Videos you want everyone to see go here later.
 
   // Example:
   // {
