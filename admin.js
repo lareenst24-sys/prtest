@@ -10,6 +10,7 @@ const clearAllBtn = document.getElementById("clearAllBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 const showMissingBtn = document.getElementById("showMissingBtn");
 const saveAllDurationsBtn = document.getElementById("saveAllDurationsBtn");
+const exportVideosBtn = document.getElementById("exportVideosBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
 const MAX_UPLOAD_AT_ONCE = 100;
@@ -101,6 +102,12 @@ if (showMissingBtn) {
 if (saveAllDurationsBtn) {
   saveAllDurationsBtn.addEventListener("click", () => {
     saveAllDurations();
+  });
+}
+
+if (exportVideosBtn) {
+  exportVideosBtn.addEventListener("click", () => {
+    exportVideosJS();
   });
 }
 
@@ -606,6 +613,45 @@ function saveAllDurations() {
   renderVideoList();
 
   alert(`${savedCount} duration(s) saved. ${skippedCount} skipped.`);
+}
+
+function exportVideosJS() {
+  const videos = getVideos()
+    .map((video, index) => {
+      return {
+        id: video.id || `video-${index + 1}`,
+        title: cleanTitle(video.title),
+        embed: isValidLink(video.embed) ? decodeText(video.embed) : "",
+        thumbnail: isValidLink(video.thumbnail) ? decodeText(video.thumbnail) : "",
+        duration: cleanDuration(video.duration)
+      };
+    })
+    .filter(video => video.embed);
+
+  if (videos.length === 0) {
+    alert("No videos to export.");
+    return;
+  }
+
+  const fileContent = `window.siteVideos = ${JSON.stringify(videos, null, 2)};\n`;
+
+  const blob = new Blob([fileContent], {
+    type: "application/javascript"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "videos.js";
+
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  alert(`${videos.length} video(s) exported as videos.js`);
 }
 
 function deleteVideo(id) {
