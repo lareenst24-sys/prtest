@@ -1,10 +1,19 @@
 const videoGrid = document.getElementById("videoGrid");
 
-let savedVideos = JSON.parse(localStorage.getItem("videos")) || [];
+// Public videos from videos.js
+const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
 
-savedVideos = savedVideos.map((video) => {
+// Private/test videos from admin localStorage
+const localVideos = JSON.parse(localStorage.getItem("videos")) || [];
+
+// Combine both lists
+let savedVideos = [...localVideos, ...publicVideos];
+
+// Clean saved videos before rendering
+savedVideos = savedVideos.map((video, index) => {
   return {
     ...video,
+    id: video.id || `video-${index + 1}`,
     title: cleanTitle(video.title),
     thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
     embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
@@ -12,7 +21,8 @@ savedVideos = savedVideos.map((video) => {
   };
 }).filter((video) => video.embed);
 
-localStorage.setItem("videos", JSON.stringify(savedVideos));
+// Do NOT overwrite localStorage with public videos.
+// localStorage stays private for admin/testing only.
 
 const isMobile = window.innerWidth <= 700;
 const videosPerLoad = isMobile ? 14 : 20;
@@ -41,7 +51,7 @@ function loadVideos() {
       ? `
         <img 
           src="${escapeAttribute(video.thumbnail)}" 
-          alt="Video thumbnail" 
+          alt="${escapeAttribute(video.title || "Video thumbnail")}" 
           class="thumbnail-img"
           loading="lazy"
           onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
@@ -53,11 +63,21 @@ function loadVideos() {
       ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
       : "";
 
+    const titleHTML = video.title
+      ? `
+        <div class="video-meta">
+          <h3 class="video-title">${escapeHTML(video.title)}</h3>
+        </div>
+      `
+      : "";
+
     card.innerHTML = `
       <div class="video-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
         ${thumbnailHTML}
         ${durationHTML}
       </div>
+
+      ${titleHTML}
     `;
 
     card.addEventListener("click", () => {
