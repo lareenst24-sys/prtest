@@ -3,11 +3,19 @@ const watchContainer = document.getElementById("watchContainer");
 const urlParams = new URLSearchParams(window.location.search);
 const videoId = urlParams.get("id");
 
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
+// Public videos from videos.js
+const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
 
-videos = videos.map((video) => {
+// Private/test videos from admin localStorage
+const localVideos = JSON.parse(localStorage.getItem("videos")) || [];
+
+// Combine both lists
+let videos = [...localVideos, ...publicVideos];
+
+videos = videos.map((video, index) => {
   return {
     ...video,
+    id: video.id || `video-${index + 1}`,
     title: cleanTitle(video.title),
     thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
     embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
@@ -15,7 +23,8 @@ videos = videos.map((video) => {
   };
 }).filter((video) => video.embed);
 
-localStorage.setItem("videos", JSON.stringify(videos));
+// Do NOT save combined videos back into localStorage.
+// localStorage stays private for admin/testing only.
 
 const currentVideo = videos.find((item) => item.id === videoId);
 
