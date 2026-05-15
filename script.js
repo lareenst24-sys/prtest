@@ -91,6 +91,8 @@ function loadVideos() {
 }
 
 function createLoadMoreButton() {
+  const loadMoreSpot = document.getElementById("loadMoreSpot");
+
   const loadMoreWrapper = document.createElement("div");
   loadMoreWrapper.className = "load-more-wrapper";
 
@@ -108,15 +110,18 @@ function createLoadMoreButton() {
 
   loadMoreWrapper.appendChild(loadMoreBtn);
 
-  const content = document.querySelector(".content");
-  const firstAd = document.querySelector(".ad-slot");
+  // This places Load More above the ads.
+  if (loadMoreSpot) {
+    loadMoreSpot.appendChild(loadMoreWrapper);
+  } else {
+    const content = document.querySelector(".content");
+    const firstAd = document.querySelector(".ad-slot");
 
-  // Important:
-  // Put Load More ABOVE ads, not under ads.
-  if (content && firstAd) {
-    content.insertBefore(loadMoreWrapper, firstAd);
-  } else if (content) {
-    content.appendChild(loadMoreWrapper);
+    if (content && firstAd) {
+      content.insertBefore(loadMoreWrapper, firstAd);
+    } else if (content) {
+      content.appendChild(loadMoreWrapper);
+    }
   }
 }
 
