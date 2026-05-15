@@ -16,7 +16,7 @@ body {
 
 .navbar {
   width: 100%;
-  padding: 14px 18px;
+  padding: 14px 2.5%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -51,8 +51,8 @@ nav a:hover {
 
 .content {
   width: 100%;
-  max-width: 100%;
-  padding: 22px 18px 40px;
+  max-width: none;
+  padding: 24px 18px 40px;
   min-height: 80vh;
 }
 
@@ -217,7 +217,7 @@ button:hover {
 ========================= */
 
 .watch-page {
-  padding: 24px 18px 40px;
+  padding: 24px 2.5% 40px;
   min-height: 80vh;
 }
 
@@ -274,13 +274,12 @@ button:hover {
    MORE VIDEOS DRAWER
 ========================= */
 
-button.more-videos-btn {
-  position: absolute !important;
-  right: 52px !important;
-  bottom: 4px !important;
-  top: auto !important;
-  left: auto !important;
-  z-index: 9999 !important;
+.more-videos-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  top: auto;
+  z-index: 20;
   background: rgba(0, 0, 0, 0.78);
   color: #ffffff;
   padding: 8px 13px;
@@ -288,28 +287,30 @@ button.more-videos-btn {
   font-size: 13px;
 }
 
-button.more-videos-btn:hover {
+.more-videos-btn:hover {
   background: rgba(20, 20, 20, 0.95);
 }
 
-div.pause-style-overlay {
-  position: absolute !important;
-  inset: auto 0 0 0 !important;
-  width: 100% !important;
-  height: 32% !important;
-  min-height: 105px !important;
-  max-height: 175px !important;
+.pause-style-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  height: 36%;
+  min-height: 125px;
+  max-height: 220px;
   background: rgba(0, 0, 0, 0.9);
-  z-index: 9998 !important;
-  display: none !important;
+  z-index: 30;
+  display: none;
   padding: 10px 12px;
-  overflow: hidden !important;
+  overflow: hidden;
   border-radius: 0 0 16px 16px;
   backdrop-filter: blur(8px);
 }
 
-div.pause-style-overlay.active {
-  display: block !important;
+.pause-style-overlay.active {
+  display: block;
 }
 
 .overlay-header {
@@ -333,12 +334,11 @@ div.pause-style-overlay.active {
   line-height: 1;
 }
 
-div.overlay-video-grid {
-  display: flex !important;
-  grid-template-columns: none !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  gap: 10px !important;
+.overlay-video-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 8px;
   scroll-snap-type: x mandatory;
 }
@@ -357,11 +357,11 @@ div.overlay-video-grid {
   border-radius: 999px;
 }
 
-a.overlay-video-card {
+.overlay-video-card {
   display: block;
   text-decoration: none;
-  flex: 0 0 130px !important;
-  width: 130px !important;
+  flex: 0 0 165px;
+  width: 165px;
   scroll-snap-align: start;
 }
 
@@ -640,7 +640,7 @@ a.overlay-video-card {
 ========================= */
 
 footer {
-  padding: 24px 18px;
+  padding: 24px 2.5%;
   color: #7d7d7d;
   border-top: 1px solid #232323;
   text-align: center;
@@ -648,24 +648,9 @@ footer {
 }
 
 /* =========================
-   RESPONSIVE
+   MOBILE
 ========================= */
 
-/* 4 videos on medium screens */
-@media (max-width: 1200px) {
-  .video-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-/* 3 videos on tablets */
-@media (max-width: 900px) {
-  .video-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-/* Mobile */
 @media (max-width: 700px) {
   .navbar {
     flex-direction: column;
@@ -679,8 +664,8 @@ footer {
   .content,
   .watch-page,
   .admin-page {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 4%;
+    padding-right: 4%;
   }
 
   .content h2 {
@@ -696,22 +681,23 @@ footer {
     font-size: 21px;
   }
 
-  button.more-videos-btn {
-    right: 52px !important;
-    bottom: 4px !important;
+  .more-videos-btn {
+    right: 8px;
+    bottom: 8px;
     font-size: 12px;
     padding: 7px 11px;
   }
 
-  div.pause-style-overlay {
-    height: 32% !important;
-    min-height: 105px !important;
-    max-height: 165px !important;
+  .pause-style-overlay {
+    height: 34%;
+    min-height: 110px;
+    max-height: 175px;
+    padding: 9px;
   }
 
-  a.overlay-video-card {
-    flex: 0 0 120px !important;
-    width: 120px !important;
+  .overlay-video-card {
+    flex: 0 0 128px;
+    width: 128px;
   }
 
   .overlay-header h3 {
@@ -720,12 +706,6 @@ footer {
 
   .also-watch-grid {
     grid-template-columns: 1fr;
-  }
-
-  .ad-box {
-    min-height: 55px;
-    max-height: 80px;
-    margin-bottom: 14px;
   }
 
   .admin-box {
@@ -772,5 +752,110 @@ footer {
 
   .small-delete-btn {
     width: 100%;
+  }
+}
+
+/* =========================
+   FINAL WATCH DRAWER FIX
+========================= */
+
+button.more-videos-btn {
+  position: absolute !important;
+  right: 52px !important;
+  bottom: 4px !important;
+  top: auto !important;
+  left: auto !important;
+  z-index: 9999 !important;
+}
+
+div.pause-style-overlay {
+  position: absolute !important;
+  inset: auto 0 0 0 !important;
+  width: 100% !important;
+  height: 32% !important;
+  min-height: 105px !important;
+  max-height: 175px !important;
+  display: none !important;
+  overflow: hidden !important;
+  z-index: 9998 !important;
+}
+
+div.pause-style-overlay.active {
+  display: block !important;
+}
+
+div.overlay-video-grid {
+  display: flex !important;
+  grid-template-columns: none !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  gap: 10px !important;
+}
+
+a.overlay-video-card {
+  flex: 0 0 130px !important;
+  width: 130px !important;
+}
+
+/* =========================
+   FINAL HOME GRID FIX
+   5 VIDEOS PER ROW
+========================= */
+
+main.content {
+  width: 100% !important;
+  max-width: none !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+}
+
+main.content #videoGrid.video-grid,
+#videoGrid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 24px 18px !important;
+  width: 100% !important;
+}
+
+#videoGrid .video-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+#videoGrid .video-thumb {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+}
+
+@media (max-width: 1200px) {
+  main.content #videoGrid.video-grid,
+  #videoGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  main.content #videoGrid.video-grid,
+  #videoGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  main.content {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  main.content #videoGrid.video-grid,
+  #videoGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ad-box {
+    min-height: 55px !important;
+    max-height: 80px !important;
+    margin-bottom: 14px !important;
   }
 }
