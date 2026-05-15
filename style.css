@@ -16,7 +16,7 @@ body {
 
 .navbar {
   width: 100%;
-  padding: 14px 2.5%;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -50,7 +50,9 @@ nav a:hover {
 ========================= */
 
 .content {
-  padding: 24px 2.5% 40px;
+  width: 100%;
+  max-width: 100%;
+  padding: 22px 18px 40px;
   min-height: 80vh;
 }
 
@@ -62,18 +64,21 @@ nav a:hover {
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 26px 16px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px 18px;
+  width: 100%;
 }
 
 .video-card {
   cursor: pointer;
+  width: 100%;
+  min-width: 0;
 }
 
 .video-thumb {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 14px;
+  border-radius: 13px;
   overflow: hidden;
   background: #181818;
   position: relative;
@@ -118,11 +123,11 @@ nav a:hover {
 }
 
 .video-meta {
-  padding-top: 10px;
+  padding-top: 9px;
 }
 
 .video-title {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.35;
   font-weight: 600;
   color: #f1f1f1;
@@ -131,6 +136,54 @@ nav a:hover {
 .empty-message {
   color: #9c9c9c;
   font-size: 14px;
+}
+
+/* =========================
+   ADS
+========================= */
+
+.ad-box {
+  width: 100%;
+  max-width: 100%;
+  min-height: 60px;
+  max-height: 90px;
+  background: #111111;
+  border: 1px solid #242424;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ad-box span {
+  color: #666666;
+  font-size: 11px;
+}
+
+.ad-home-top,
+.ad-home-native {
+  margin-bottom: 16px;
+}
+
+.ad-watch-top {
+  margin-bottom: 18px;
+}
+
+.ad-watch-bottom {
+  margin-top: 28px;
+}
+
+.ad-box iframe,
+.ad-box ins,
+.ad-box div {
+  max-width: 100%;
+}
+
+.ad-box > div {
+  max-height: 90px;
+  overflow: hidden;
 }
 
 /* =========================
@@ -164,7 +217,7 @@ button:hover {
 ========================= */
 
 .watch-page {
-  padding: 24px 2.5% 40px;
+  padding: 24px 18px 40px;
   min-height: 80vh;
 }
 
@@ -221,12 +274,13 @@ button:hover {
    MORE VIDEOS DRAWER
 ========================= */
 
-.more-videos-btn {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  top: auto;
-  z-index: 20;
+button.more-videos-btn {
+  position: absolute !important;
+  right: 52px !important;
+  bottom: 4px !important;
+  top: auto !important;
+  left: auto !important;
+  z-index: 9999 !important;
   background: rgba(0, 0, 0, 0.78);
   color: #ffffff;
   padding: 8px 13px;
@@ -234,31 +288,28 @@ button:hover {
   font-size: 13px;
 }
 
-.more-videos-btn:hover {
+button.more-videos-btn:hover {
   background: rgba(20, 20, 20, 0.95);
 }
 
-/* Small pull-up drawer inside the video */
-.pause-style-overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: auto;
-  height: 36%;
-  min-height: 125px;
-  max-height: 220px;
+div.pause-style-overlay {
+  position: absolute !important;
+  inset: auto 0 0 0 !important;
+  width: 100% !important;
+  height: 32% !important;
+  min-height: 105px !important;
+  max-height: 175px !important;
   background: rgba(0, 0, 0, 0.9);
-  z-index: 30;
-  display: none;
+  z-index: 9998 !important;
+  display: none !important;
   padding: 10px 12px;
-  overflow: hidden;
+  overflow: hidden !important;
   border-radius: 0 0 16px 16px;
   backdrop-filter: blur(8px);
 }
 
-.pause-style-overlay.active {
-  display: block;
+div.pause-style-overlay.active {
+  display: block !important;
 }
 
 .overlay-header {
@@ -282,11 +333,12 @@ button:hover {
   line-height: 1;
 }
 
-.overlay-video-grid {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  overflow-y: hidden;
+div.overlay-video-grid {
+  display: flex !important;
+  grid-template-columns: none !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  gap: 10px !important;
   padding-bottom: 8px;
   scroll-snap-type: x mandatory;
 }
@@ -305,11 +357,11 @@ button:hover {
   border-radius: 999px;
 }
 
-.overlay-video-card {
+a.overlay-video-card {
   display: block;
   text-decoration: none;
-  flex: 0 0 165px;
-  width: 165px;
+  flex: 0 0 130px !important;
+  width: 130px !important;
   scroll-snap-align: start;
 }
 
@@ -588,7 +640,7 @@ button:hover {
 ========================= */
 
 footer {
-  padding: 24px 2.5%;
+  padding: 24px 18px;
   color: #7d7d7d;
   border-top: 1px solid #232323;
   text-align: center;
@@ -596,9 +648,24 @@ footer {
 }
 
 /* =========================
-   MOBILE
+   RESPONSIVE
 ========================= */
 
+/* 4 videos on medium screens */
+@media (max-width: 1200px) {
+  .video-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* 3 videos on tablets */
+@media (max-width: 900px) {
+  .video-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
 @media (max-width: 700px) {
   .navbar {
     flex-direction: column;
@@ -612,8 +679,8 @@ footer {
   .content,
   .watch-page,
   .admin-page {
-    padding-left: 4%;
-    padding-right: 4%;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .content h2 {
@@ -629,23 +696,22 @@ footer {
     font-size: 21px;
   }
 
-  .more-videos-btn {
-    right: 8px;
-    bottom: 8px;
+  button.more-videos-btn {
+    right: 52px !important;
+    bottom: 4px !important;
     font-size: 12px;
     padding: 7px 11px;
   }
 
-  .pause-style-overlay {
-    height: 34%;
-    min-height: 110px;
-    max-height: 175px;
-    padding: 9px;
+  div.pause-style-overlay {
+    height: 32% !important;
+    min-height: 105px !important;
+    max-height: 165px !important;
   }
 
-  .overlay-video-card {
-    flex: 0 0 128px;
-    width: 128px;
+  a.overlay-video-card {
+    flex: 0 0 120px !important;
+    width: 120px !important;
   }
 
   .overlay-header h3 {
@@ -654,6 +720,12 @@ footer {
 
   .also-watch-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ad-box {
+    min-height: 55px;
+    max-height: 80px;
+    margin-bottom: 14px;
   }
 
   .admin-box {
@@ -700,174 +772,5 @@ footer {
 
   .small-delete-btn {
     width: 100%;
-  }
-}
-/* FORCE MORE VIDEOS BUTTON + SMALL DRAWER FIX */
-
-.more-videos-btn {
-  right: 70px !important;
-  bottom: 12px !important;
-  top: auto !important;
-  position: absolute !important;
-  z-index: 50 !important;
-}
-
-/* keep drawer small, not full screen */
-.pause-style-overlay {
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  top: auto !important;
-
-  height: 34% !important;
-  min-height: 120px !important;
-  max-height: 200px !important;
-
-  display: none !important;
-  overflow: hidden !important;
-  z-index: 40 !important;
-}
-
-.pause-style-overlay.active {
-  display: block !important;
-}
-
-/* horizontal scroll videos */
-.overlay-video-grid {
-  display: flex !important;
-  grid-template-columns: none !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  gap: 10px !important;
-}
-
-.overlay-video-card {
-  flex: 0 0 150px !important;
-  width: 150px !important;
-}
-
-@media (max-width: 700px) {
-.more-videos-btn {
-  right: 70px !important;
-  bottom: 2px !important;
-  top: auto !important;
-  position: absolute !important;
-  z-index: 50 !important;
-}
-
-  .pause-style-overlay {
-    height: 32% !important;
-    min-height: 105px !important;
-    max-height: 165px !important;
-  }
-
-  .overlay-video-card {
-    flex: 0 0 120px !important;
-    width: 120px !important;
-  }
-}
-/* FINAL FORCE FIX — MORE VIDEOS BUTTON POSITION */
-
-button.more-videos-btn {
-  position: absolute !important;
-  right: 52px !important;
-  bottom: 4px !important;
-  top: auto !important;
-  left: auto !important;
-  z-index: 9999 !important;
-}
-
-/* FORCE SMALL BOTTOM DRAWER */
-div.pause-style-overlay {
-  position: absolute !important;
-  inset: auto 0 0 0 !important;
-  width: 100% !important;
-  height: 32% !important;
-  min-height: 105px !important;
-  max-height: 175px !important;
-  display: none !important;
-  overflow: hidden !important;
-  z-index: 9998 !important;
-}
-
-div.pause-style-overlay.active {
-  display: block !important;
-}
-
-div.overlay-video-grid {
-  display: flex !important;
-  grid-template-columns: none !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  gap: 10px !important;
-}
-
-a.overlay-video-card {
-  flex: 0 0 130px !important;
-  width: 130px !important;
-}
-/* =========================
-   HOME PAGE SIZE FIX
-   4 VIDEOS PER ROW + SMALLER ADS
-========================= */
-
-/* 4 videos per row on desktop */
-.video-grid {
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 22px 16px !important;
-}
-
-/* Make page content a little wider */
-.content {
-  padding-left: 2% !important;
-  padding-right: 2% !important;
-}
-
-/* Smaller cleaner ads on homepage */
-.ad-box {
-  min-height: 60px !important;
-  max-height: 90px !important;
-  border-radius: 10px !important;
-  margin-bottom: 18px !important;
-  background: #111111 !important;
-}
-
-/* Home ad spacing */
-.ad-home-top,
-.ad-home-native {
-  margin-bottom: 16px !important;
-}
-
-/* Make ad text smaller */
-.ad-box span {
-  font-size: 11px !important;
-  color: #666 !important;
-}
-
-/* Make native ad container not huge */
-.ad-box > div {
-  max-height: 90px !important;
-  overflow: hidden !important;
-}
-
-/* Tablet: 3 videos per row */
-@media (max-width: 1100px) {
-  .video-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-}
-
-/* Phone: 1 video per row */
-@media (max-width: 700px) {
-  .video-grid {
-    grid-template-columns: 1fr !important;
-    gap: 20px !important;
-  }
-
-  .ad-box {
-    min-height: 55px !important;
-    max-height: 80px !important;
-    margin-bottom: 14px !important;
   }
 }
