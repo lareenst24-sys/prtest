@@ -16,7 +16,7 @@ body {
 
 .navbar {
   width: 100%;
-  padding: 14px 2.5%;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -139,49 +139,34 @@ nav a:hover {
 }
 
 /* =========================
-   ADS
+   CLEAN ADS
 ========================= */
 
-.ad-box {
+.ad-slot {
   width: 100%;
   max-width: 1100px;
-  min-height: 90px;
-  background: #151515;
-  border: 1px solid #262626;
-  border-radius: 14px;
-  margin-top: 32px;
-  margin-bottom: 24px;
+  margin: 40px auto 24px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  overflow: hidden;
+  align-items: center;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
-.ad-box span {
-  color: #777777;
-  font-size: 13px;
+.ad-slot iframe,
+.ad-slot ins,
+.ad-slot div {
+  max-width: 100%;
 }
 
 .ad-home-bottom {
-  margin-top: 36px;
-}
-
-.ad-home-native {
-  margin-top: 18px;
+  margin-top: 42px;
 }
 
 .ad-watch-bottom {
-  margin-top: 34px;
-}
-
-.ad-watch-native {
-  margin-top: 18px;
-}
-
-.ad-box iframe,
-.ad-box ins,
-.ad-box div {
-  max-width: 100%;
+  margin-top: 36px;
 }
 
 /* =========================
@@ -215,7 +200,7 @@ button:hover {
 ========================= */
 
 .watch-page {
-  padding: 24px 2.5% 40px;
+  padding: 24px 18px 40px;
   min-height: 80vh;
 }
 
@@ -638,126 +623,11 @@ button:hover {
 ========================= */
 
 footer {
-  padding: 24px 2.5%;
+  padding: 24px 18px;
   color: #7d7d7d;
   border-top: 1px solid #232323;
   text-align: center;
   font-size: 14px;
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 700px) {
-  .navbar {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  nav a {
-    margin: 0 8px;
-  }
-
-  .content,
-  .watch-page,
-  .admin-page {
-    padding-left: 4%;
-    padding-right: 4%;
-  }
-
-  .content h2 {
-    font-size: 24px;
-  }
-
-  .video-grid {
-    grid-template-columns: 1fr;
-    gap: 22px;
-  }
-
-  .watch-info h1 {
-    font-size: 21px;
-  }
-
-  .more-videos-btn {
-    right: 8px;
-    bottom: 8px;
-    font-size: 12px;
-    padding: 7px 11px;
-  }
-
-  .pause-style-overlay {
-    height: 34%;
-    min-height: 110px;
-    max-height: 175px;
-    padding: 9px;
-  }
-
-  .overlay-video-card {
-    flex: 0 0 128px;
-    width: 128px;
-  }
-
-  .overlay-header h3 {
-    font-size: 13px;
-  }
-
-  .also-watch-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .ad-box {
-    min-height: 70px;
-    border-radius: 10px;
-    margin-top: 24px;
-    margin-bottom: 18px;
-  }
-
-  .admin-box {
-    padding: 18px;
-  }
-
-  .admin-header h1 {
-    font-size: 26px;
-  }
-
-  .saved-header {
-    flex-direction: column;
-  }
-
-  .admin-actions {
-    width: 100%;
-  }
-
-  .admin-actions button {
-    width: 100%;
-  }
-
-  .selectable-video-item {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .admin-video-main {
-    grid-template-columns: 22px 1fr;
-  }
-
-  .admin-video-preview {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-
-  .duration-edit-row {
-    flex-direction: column;
-  }
-
-  .duration-input {
-    max-width: 100%;
-  }
-
-  .small-delete-btn {
-    width: 100%;
-  }
 }
 
 /* =========================
@@ -832,6 +702,10 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
   aspect-ratio: 16 / 9 !important;
 }
 
+/* =========================
+   RESPONSIVE
+========================= */
+
 @media (max-width: 1200px) {
   main#videos.content > div#videoGrid.video-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
@@ -845,6 +719,22 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
 }
 
 @media (max-width: 700px) {
+  .navbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  nav a {
+    margin: 0 8px;
+  }
+
+  .content,
+  .watch-page,
+  .admin-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
   main#videos.content {
     padding-left: 12px !important;
     padding-right: 12px !important;
@@ -852,5 +742,95 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
 
   main#videos.content > div#videoGrid.video-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .content h2 {
+    font-size: 24px;
+  }
+
+  .video-grid {
+    gap: 22px;
+  }
+
+  .watch-info h1 {
+    font-size: 21px;
+  }
+
+  button.more-videos-btn {
+    right: 52px !important;
+    bottom: 4px !important;
+    font-size: 12px;
+    padding: 7px 11px;
+  }
+
+  div.pause-style-overlay {
+    height: 32% !important;
+    min-height: 105px !important;
+    max-height: 165px !important;
+  }
+
+  a.overlay-video-card {
+    flex: 0 0 120px !important;
+    width: 120px !important;
+  }
+
+  .overlay-header h3 {
+    font-size: 13px;
+  }
+
+  .also-watch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-slot {
+    margin-top: 28px;
+    margin-bottom: 18px;
+    padding: 0 4px;
+  }
+
+  .admin-box {
+    padding: 18px;
+  }
+
+  .admin-header h1 {
+    font-size: 26px;
+  }
+
+  .saved-header {
+    flex-direction: column;
+  }
+
+  .admin-actions {
+    width: 100%;
+  }
+
+  .admin-actions button {
+    width: 100%;
+  }
+
+  .selectable-video-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-video-main {
+    grid-template-columns: 22px 1fr;
+  }
+
+  .admin-video-preview {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .duration-edit-row {
+    flex-direction: column;
+  }
+
+  .duration-input {
+    max-width: 100%;
+  }
+
+  .small-delete-btn {
+    width: 100%;
   }
 }
