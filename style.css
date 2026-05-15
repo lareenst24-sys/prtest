@@ -139,13 +139,14 @@ nav a:hover {
 }
 
 /* =========================
-   CLEAN ADS
+   CLEAN BIG ADS
 ========================= */
 
 .ad-slot {
   width: 100%;
-  max-width: 1100px;
-  margin: 40px auto 24px;
+  max-width: 1320px;
+  min-height: 150px;
+  margin: 52px auto 36px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -161,12 +162,19 @@ nav a:hover {
   max-width: 100%;
 }
 
+.ad-slot > div {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .ad-home-bottom {
-  margin-top: 42px;
+  margin-top: 56px;
 }
 
 .ad-watch-bottom {
-  margin-top: 36px;
+  margin-top: 46px;
 }
 
 /* =========================
@@ -783,8 +791,10 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
   }
 
   .ad-slot {
-    margin-top: 28px;
-    margin-bottom: 18px;
+    max-width: 100%;
+    min-height: 120px;
+    margin-top: 34px;
+    margin-bottom: 22px;
     padding: 0 4px;
   }
 
