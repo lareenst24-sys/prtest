@@ -13,7 +13,7 @@ const saveAllDurationsBtn = document.getElementById("saveAllDurationsBtn");
 const exportVideosBtn = document.getElementById("exportVideosBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
-const MAX_UPLOAD_AT_ONCE = 100;
+const MAX_UPLOAD_AT_ONCE = 300;
 
 let currentFilter = "all";
 
