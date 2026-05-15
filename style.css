@@ -139,14 +139,14 @@ nav a:hover {
 }
 
 /* =========================
-   CLEAN BIG ADS
+   CLEAN ADS - OLD SIZE
 ========================= */
 
 .ad-slot {
   width: 100%;
-  max-width: 1320px;
-  min-height: 150px;
-  margin: 52px auto 36px;
+  max-width: 1100px;
+  min-height: 90px;
+  margin: 36px auto 24px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -163,18 +163,16 @@ nav a:hover {
 }
 
 .ad-slot > div {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: auto;
+  max-width: 100%;
 }
 
 .ad-home-bottom {
-  margin-top: 56px;
+  margin-top: 36px;
 }
 
 .ad-watch-bottom {
-  margin-top: 46px;
+  margin-top: 34px;
 }
 
 /* =========================
@@ -792,9 +790,9 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
 
   .ad-slot {
     max-width: 100%;
-    min-height: 120px;
-    margin-top: 34px;
-    margin-bottom: 22px;
+    min-height: 90px;
+    margin-top: 30px;
+    margin-bottom: 20px;
     padding: 0 4px;
   }
 
