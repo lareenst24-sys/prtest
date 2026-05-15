@@ -109,7 +109,15 @@ function createLoadMoreButton() {
   loadMoreWrapper.appendChild(loadMoreBtn);
 
   const content = document.querySelector(".content");
-  content.appendChild(loadMoreWrapper);
+  const firstAd = document.querySelector(".ad-slot");
+
+  // Important:
+  // Put Load More ABOVE ads, not under ads.
+  if (content && firstAd) {
+    content.insertBefore(loadMoreWrapper, firstAd);
+  } else if (content) {
+    content.appendChild(loadMoreWrapper);
+  }
 }
 
 function cleanTitle(title) {
