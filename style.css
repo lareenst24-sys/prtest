@@ -139,14 +139,14 @@ nav a:hover {
 }
 
 /* =========================
-   CLEAN ADS - OLD SIZE
+   CLEAN MEDIUM-BIG ADS
 ========================= */
 
 .ad-slot {
   width: 100%;
-  max-width: 1100px;
-  min-height: 90px;
-  margin: 36px auto 24px;
+  max-width: 1180px;
+  min-height: 125px;
+  margin: 44px auto 30px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -163,16 +163,19 @@ nav a:hover {
 }
 
 .ad-slot > div {
-  width: auto;
+  width: 100%;
   max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .ad-home-bottom {
-  margin-top: 36px;
+  margin-top: 46px;
 }
 
 .ad-watch-bottom {
-  margin-top: 34px;
+  margin-top: 42px;
 }
 
 /* =========================
@@ -183,6 +186,7 @@ nav a:hover {
   display: flex;
   justify-content: center;
   margin-top: 34px;
+  margin-bottom: 6px;
 }
 
 .load-more-btn,
