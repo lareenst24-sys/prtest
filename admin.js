@@ -9,6 +9,7 @@ const filterStatusText = document.getElementById("filterStatusText");
 const clearAllBtn = document.getElementById("clearAllBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 const showMissingBtn = document.getElementById("showMissingBtn");
+const importPublicVideosBtn = document.getElementById("importPublicVideosBtn");
 const saveAllDurationsBtn = document.getElementById("saveAllDurationsBtn");
 const exportVideosBtn = document.getElementById("exportVideosBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
@@ -26,64 +27,66 @@ document.addEventListener("input", (event) => {
 
 renderVideoList();
 
-addVideosBtn.addEventListener("click", () => {
-  const rawText = bulkEmbedInput.value.trim();
+if (addVideosBtn) {
+  addVideosBtn.addEventListener("click", () => {
+    const rawText = bulkEmbedInput.value.trim();
 
-  if (!rawText) {
-    alert("Paste at least one iframe code or embed link.");
-    return;
-  }
-
-  const blocks = splitEmbedBlocks(rawText).slice(0, MAX_UPLOAD_AT_ONCE);
-
-  const videos = getVideos();
-  const newVideos = [];
-  const skippedVideos = [];
-
-  blocks.forEach((block, index) => {
-    const rawInput = block.trim();
-
-    if (!rawInput) return;
-
-    const extracted = extractVideoData(rawInput);
-
-    if (!isValidLink(extracted.embed)) {
-      skippedVideos.push(index + 1);
+    if (!rawText) {
+      alert("Paste at least one iframe code or embed link.");
       return;
     }
 
-    newVideos.push({
-      id: `video-${Date.now()}-${index}`,
-      title: cleanTitle(extracted.title),
-      embed: extracted.embed,
-      thumbnail: extracted.thumbnail || "",
-      duration: ""
+    const blocks = splitEmbedBlocks(rawText).slice(0, MAX_UPLOAD_AT_ONCE);
+
+    const videos = getVideos();
+    const newVideos = [];
+    const skippedVideos = [];
+
+    blocks.forEach((block, index) => {
+      const rawInput = block.trim();
+
+      if (!rawInput) return;
+
+      const extracted = extractVideoData(rawInput);
+
+      if (!isValidLink(extracted.embed)) {
+        skippedVideos.push(index + 1);
+        return;
+      }
+
+      newVideos.push({
+        id: `video-${Date.now()}-${index}`,
+        title: cleanTitle(extracted.title),
+        embed: extracted.embed,
+        thumbnail: extracted.thumbnail || "",
+        duration: ""
+      });
     });
+
+    if (newVideos.length === 0) {
+      alert("No valid videos found. Make sure each embed has a valid iframe src or https link.");
+      return;
+    }
+
+    saveVideos([...newVideos, ...videos]);
+
+    bulkEmbedInput.value = "";
+
+    renderVideoList();
+
+    let message = `${newVideos.length} video(s) added successfully.`;
+
+    if (blocks.length >= MAX_UPLOAD_AT_ONCE) {
+      message += `\nOnly the first ${MAX_UPLOAD_AT_ONCE} videos were processed.`;
+    }
+
+    if (skippedVideos.length > 0) {
+      message += `\nSkipped item(s): ${skippedVideos.join(", ")}`;
+    }
+
+    alert(message);
   });
-
-  if (newVideos.length === 0) {
-    alert("No valid videos found. Make sure each embed has a valid iframe src or https link.");
-    return;
-  }
-
-  saveVideos([...newVideos, ...videos]);
-
-  bulkEmbedInput.value = "";
-
-  renderVideoList();
-
-  let message = `${newVideos.length} video(s) added successfully.`;
-
-  if (blocks.length >= MAX_UPLOAD_AT_ONCE) {
-    message += `\nOnly the first ${MAX_UPLOAD_AT_ONCE} videos were processed.`;
-  }
-
-  if (skippedVideos.length > 0) {
-    message += `\nSkipped item(s): ${skippedVideos.join(", ")}`;
-  }
-
-  alert(message);
-});
+}
 
 if (showAllBtn) {
   showAllBtn.addEventListener("click", () => {
@@ -96,6 +99,12 @@ if (showMissingBtn) {
   showMissingBtn.addEventListener("click", () => {
     currentFilter = "missing";
     renderVideoList();
+  });
+}
+
+if (importPublicVideosBtn) {
+  importPublicVideosBtn.addEventListener("click", () => {
+    importPublicVideos();
   });
 }
 
@@ -137,22 +146,28 @@ if (deleteSelectedBtn) {
   });
 }
 
-clearAllBtn.addEventListener("click", () => {
-  const confirmDelete = confirm("Are you sure you want to delete all saved videos?");
+if (clearAllBtn) {
+  clearAllBtn.addEventListener("click", () => {
+    const confirmDelete = confirm("Are you sure you want to delete all saved videos?");
 
-  if (!confirmDelete) return;
+    if (!confirmDelete) return;
 
-  localStorage.removeItem("videos");
-  renderVideoList();
+    localStorage.removeItem("videos");
+    renderVideoList();
 
-  alert("All videos deleted.");
-});
+    alert("All videos deleted.");
+  });
+}
+
+/* =========================
+   SPLIT BULK INPUT
+========================= */
 
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
   /*
-    For large multi-line embed blocks, separate videos with:
+    If you paste large blocks, separate videos with:
     ---VIDEO---
   */
   const separatedBlocks = trimmed
@@ -165,8 +180,18 @@ function splitEmbedBlocks(text) {
   }
 
   /*
-    Best normal format:
-    One FULL embed code per line.
+    If full iframe tags are pasted together,
+    extract every full iframe as its own video.
+  */
+  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
+
+  if (iframeMatches && iframeMatches.length > 1) {
+    return iframeMatches.map(item => item.trim()).filter(Boolean);
+  }
+
+  /*
+    If links/codes are pasted one per line,
+    treat each line as one video.
   */
   const lines = trimmed
     .split("\n")
@@ -177,38 +202,29 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  /*
-    Fallback:
-    If many iframes are pasted in one giant line.
-  */
-  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
-
-  if (iframeMatches && iframeMatches.length > 1) {
-    return iframeMatches.map(item => item.trim()).filter(Boolean);
-  }
-
   return [trimmed];
 }
 
+/* =========================
+   STRICT VIDEO DATA EXTRACTOR
+   Saves only:
+   - iframe src / video link
+   - thumbnail link
+   - title
+   Everything else is ignored.
+========================= */
+
 function extractVideoData(input) {
-  const trimmed = input.trim();
+  const trimmed = String(input || "").trim();
 
   let embedPart = trimmed;
   let manualThumbnail = "";
+  let manualTitle = "";
 
   /*
-    SAFE RULE:
-    From embed code we only extract:
-    - iframe src / video link
-    - thumbnail image link
-    - title
-
-    We DO NOT extract:
-    - duration
-    - random text
-    - extra metadata
+    Optional manual format:
+    iframe/link || thumbnail || title
   */
-
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||").map(piece => piece.trim());
 
@@ -219,89 +235,138 @@ function extractVideoData(input) {
 
       if (!piece) continue;
 
-      // Only accept manual thumbnail if it is a real link
-      if (isValidLink(piece)) {
-        manualThumbnail = piece;
-        break;
+      if (!manualThumbnail && isValidLink(piece)) {
+        manualThumbnail = decodeText(piece);
+        continue;
+      }
+
+      if (!manualTitle && !isValidLink(piece)) {
+        manualTitle = cleanTitle(piece);
       }
     }
   }
 
   let embed = "";
   let thumbnail = manualThumbnail;
-  let title = "";
-
-  // Extract iframe src only
-  const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
-
-  if (iframeSrc && iframeSrc[1]) {
-    embed = decodeText(iframeSrc[1].trim());
-  } else if (isValidLink(embedPart)) {
-    embed = decodeText(embedPart);
-  }
+  let title = manualTitle;
 
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
 
-  // Extract safe title only from title-like attributes
-  const titleAttr = embedPart.match(/title=["']([^"']+)["']/i);
-  if (titleAttr && titleAttr[1]) {
-    title = cleanTitle(titleAttr[1]);
-  }
+  /*
+    1. Extract video embed link.
+    Priority:
+    - iframe src
+    - embed src
+    - video src
+    - source src
+    - direct link if user pasted only URL
+  */
+  const iframeElement = doc.querySelector("iframe[src]");
+  const embedElement = doc.querySelector("embed[src]");
+  const videoElement = doc.querySelector("video[src]");
+  const sourceElement = doc.querySelector("source[src]");
 
-  const dataTitle = embedPart.match(/data-title=["']([^"']+)["']/i);
-  if (!title && dataTitle && dataTitle[1]) {
-    title = cleanTitle(dataTitle[1]);
-  }
+  if (iframeElement && iframeElement.getAttribute("src")) {
+    embed = decodeText(iframeElement.getAttribute("src").trim());
+  } else if (embedElement && embedElement.getAttribute("src")) {
+    embed = decodeText(embedElement.getAttribute("src").trim());
+  } else if (videoElement && videoElement.getAttribute("src")) {
+    embed = decodeText(videoElement.getAttribute("src").trim());
+  } else if (sourceElement && sourceElement.getAttribute("src")) {
+    embed = decodeText(sourceElement.getAttribute("src").trim());
+  } else if (isValidLink(embedPart)) {
+    embed = decodeText(embedPart);
+  } else {
+    const iframeSrcMatch = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
-  const ariaLabel = embedPart.match(/aria-label=["']([^"']+)["']/i);
-  if (!title && ariaLabel && ariaLabel[1]) {
-    title = cleanTitle(ariaLabel[1]);
-  }
-
-  const altTitle = embedPart.match(/alt=["']([^"']+)["']/i);
-  if (!title && altTitle && altTitle[1]) {
-    title = cleanTitle(altTitle[1]);
-  }
-
-  // Extract thumbnail from common image/thumbnail attributes only
-  const imageSelectors = [
-    "img[src]",
-    "img[data-src]",
-    "[poster]",
-    "[data-poster]",
-    "[data-thumbnail]",
-    "[thumbnail]",
-    "[image]",
-    "[data-image]"
-  ];
-
-  for (const selector of imageSelectors) {
-    const element = doc.querySelector(selector);
-    if (!element) continue;
-
-    const possibleThumb =
-      element.getAttribute("src") ||
-      element.getAttribute("data-src") ||
-      element.getAttribute("poster") ||
-      element.getAttribute("data-poster") ||
-      element.getAttribute("data-thumbnail") ||
-      element.getAttribute("thumbnail") ||
-      element.getAttribute("image") ||
-      element.getAttribute("data-image");
-
-    if (possibleThumb && isValidLink(possibleThumb)) {
-      thumbnail = decodeText(possibleThumb.trim());
-      break;
+    if (iframeSrcMatch && iframeSrcMatch[1]) {
+      embed = decodeText(iframeSrcMatch[1].trim());
     }
   }
 
-  // Regex thumbnail fallback
+  /*
+    2. Extract title.
+    Only from safe title-like places.
+  */
+  if (!title) {
+    const titleSources = [
+      iframeElement?.getAttribute("title"),
+      doc.querySelector("[data-title]")?.getAttribute("data-title"),
+      doc.querySelector("[aria-label]")?.getAttribute("aria-label"),
+      doc.querySelector("img[alt]")?.getAttribute("alt"),
+      doc.querySelector("[title]")?.getAttribute("title")
+    ];
+
+    for (const source of titleSources) {
+      const cleaned = cleanTitle(source);
+
+      if (cleaned) {
+        title = cleaned;
+        break;
+      }
+    }
+  }
+
+  /*
+    3. Extract thumbnail.
+    This ignores watermark links/buttons/scripts.
+    Only image/poster/thumbnail-like attributes are allowed.
+  */
+  if (!thumbnail) {
+    const thumbnailSelectors = [
+      "img[src]",
+      "img[data-src]",
+      "img[data-original]",
+      "img[data-lazy-src]",
+      "video[poster]",
+      "[poster]",
+      "[data-poster]",
+      "[data-thumbnail]",
+      "[thumbnail]",
+      "[data-thumb]",
+      "[thumb]",
+      "[image]",
+      "[data-image]"
+    ];
+
+    for (const selector of thumbnailSelectors) {
+      const element = doc.querySelector(selector);
+
+      if (!element) continue;
+
+      const possibleThumb =
+        element.getAttribute("src") ||
+        element.getAttribute("data-src") ||
+        element.getAttribute("data-original") ||
+        element.getAttribute("data-lazy-src") ||
+        element.getAttribute("poster") ||
+        element.getAttribute("data-poster") ||
+        element.getAttribute("data-thumbnail") ||
+        element.getAttribute("thumbnail") ||
+        element.getAttribute("data-thumb") ||
+        element.getAttribute("thumb") ||
+        element.getAttribute("image") ||
+        element.getAttribute("data-image");
+
+      if (possibleThumb && isValidLink(possibleThumb)) {
+        thumbnail = decodeText(possibleThumb.trim());
+        break;
+      }
+    }
+  }
+
+  /*
+    4. Regex fallback for thumbnails.
+    Still only accepts image-looking URLs or thumbnail attributes.
+  */
   if (!thumbnail) {
     const thumbPatterns = [
       /data-thumbnail=["']([^"']+)["']/i,
       /poster=["']([^"']+)["']/i,
       /data-poster=["']([^"']+)["']/i,
       /thumbnail=["']([^"']+)["']/i,
+      /data-thumb=["']([^"']+)["']/i,
+      /thumb=["']([^"']+)["']/i,
       /image=["']([^"']+)["']/i,
       /data-image=["']([^"']+)["']/i,
       /<img[^>]*src=["']([^"']+)["']/i,
@@ -318,7 +383,11 @@ function extractVideoData(input) {
     }
   }
 
-  // Last fallback: first image-looking URL only
+  /*
+    5. Last thumbnail fallback:
+    first actual image URL only.
+    This will not use random non-image links.
+  */
   if (!thumbnail) {
     const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
 
@@ -328,11 +397,78 @@ function extractVideoData(input) {
   }
 
   return {
-    embed,
-    thumbnail,
-    title
+    embed: isValidLink(embed) ? embed : "",
+    thumbnail: isValidLink(thumbnail) ? thumbnail : "",
+    title: cleanTitle(title)
   };
 }
+
+/* =========================
+   IMPORT PUBLIC videos.js
+========================= */
+
+function importPublicVideos() {
+  const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
+
+  if (publicVideos.length === 0) {
+    alert("No videos found in videos.js. Make sure adminprtest.html loads videos.js before admin.js.");
+    return;
+  }
+
+  const currentVideos = getVideos();
+
+  const cleanedPublicVideos = publicVideos
+    .map((video, index) => {
+      return {
+        id: video.id || `video-public-${index + 1}`,
+        title: cleanTitle(video.title),
+        embed: isValidLink(video.embed) ? decodeText(video.embed) : "",
+        thumbnail: isValidLink(video.thumbnail) ? decodeText(video.thumbnail) : "",
+        duration: cleanDuration(video.duration)
+      };
+    })
+    .filter(video => video.embed);
+
+  if (cleanedPublicVideos.length === 0) {
+    alert("videos.js was found, but no valid videos were imported.");
+    return;
+  }
+
+  const mergedVideos = mergeVideos(cleanedPublicVideos, currentVideos);
+
+  saveVideos(mergedVideos);
+  renderVideoList();
+
+  alert(`${cleanedPublicVideos.length} video(s) imported from videos.js.`);
+}
+
+function mergeVideos(importedVideos, existingVideos) {
+  const map = new Map();
+
+  existingVideos.forEach((video) => {
+    if (!video.embed) return;
+
+    const key = video.id || video.embed;
+
+    map.set(key, video);
+  });
+
+  importedVideos.forEach((video) => {
+    if (!video.embed) return;
+
+    const key = video.id || video.embed;
+
+    if (!map.has(key)) {
+      map.set(key, video);
+    }
+  });
+
+  return Array.from(map.values());
+}
+
+/* =========================
+   CLEANERS
+========================= */
 
 function cleanTitle(title) {
   if (!title) return "";
@@ -360,7 +496,9 @@ function cleanTitle(title) {
     clean.includes("</iframe>") ||
     clean.includes("src=") ||
     clean.includes("https://") ||
-    clean.includes("http://")
+    clean.includes("http://") ||
+    clean.includes("<script") ||
+    clean.includes("</script>")
   ) {
     return "";
   }
@@ -424,7 +562,15 @@ function decodeText(text) {
 }
 
 function getVideos() {
-  return JSON.parse(localStorage.getItem("videos")) || [];
+  try {
+    const raw = localStorage.getItem("videos");
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Could not read videos from localStorage.", error);
+    return [];
+  }
 }
 
 function saveVideos(videos) {
@@ -439,12 +585,16 @@ function isValidLink(link) {
   );
 }
 
+/* =========================
+   RENDER ADMIN VIDEO LIST
+========================= */
+
 function renderVideoList() {
   let videos = getVideos();
 
-  videos = videos.map((video) => {
+  videos = videos.map((video, index) => {
     return {
-      ...video,
+      id: video.id || `video-${index + 1}`,
       title: cleanTitle(video.title),
       duration: cleanDuration(video.duration),
       thumbnail: isValidLink(video.thumbnail) ? decodeText(video.thumbnail) : "",
@@ -471,7 +621,11 @@ function renderVideoList() {
     }
   }
 
-  videoCountText.textContent = `${totalVideos} videos saved • ${missingThumbnailVideos} missing thumbnails`;
+  if (videoCountText) {
+    videoCountText.textContent = `${totalVideos} videos saved • ${missingThumbnailVideos} missing thumbnails`;
+  }
+
+  if (!videoList) return;
 
   if (displayVideos.length === 0) {
     videoList.innerHTML = "<p>No videos to show.</p>";
@@ -500,6 +654,9 @@ function renderVideoList() {
             title="Video preview"
             loading="lazy"
             frameborder="0"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+            allow="fullscreen; picture-in-picture; encrypted-media"
+            referrerpolicy="no-referrer"
             allowfullscreen>
           </iframe>
         </div>
@@ -534,6 +691,10 @@ function renderVideoList() {
     videoList.appendChild(moreText);
   }
 }
+
+/* =========================
+   DURATION
+========================= */
 
 function saveDuration(id) {
   const input = document.getElementById(`duration-${id}`);
@@ -615,6 +776,10 @@ function saveAllDurations() {
   alert(`${savedCount} duration(s) saved. ${skippedCount} skipped.`);
 }
 
+/* =========================
+   EXPORT
+========================= */
+
 function exportVideosJS() {
   const videos = getVideos()
     .map((video, index) => {
@@ -654,6 +819,10 @@ function exportVideosJS() {
   alert(`${videos.length} video(s) exported as videos.js`);
 }
 
+/* =========================
+   DELETE
+========================= */
+
 function deleteVideo(id) {
   let videos = getVideos();
 
@@ -663,6 +832,10 @@ function deleteVideo(id) {
 
   renderVideoList();
 }
+
+/* =========================
+   ESCAPE
+========================= */
 
 function escapeHTML(text) {
   const div = document.createElement("div");
