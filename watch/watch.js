@@ -32,7 +32,7 @@ if (!currentVideo) {
   watchContainer.innerHTML = `
     <h2>Video not found</h2>
     <p>This video does not exist or was removed.</p>
-    <a href="index.html" class="back-link">Go back home</a>
+    <a href="../index.html" class="back-link">Go back home</a>
   `;
 } else {
   const suggestedVideos = getSuggestedVideos(currentVideo.id, 9);
@@ -120,7 +120,7 @@ function renderMiniVideos(items) {
       : "";
 
     return `
-      <a class="overlay-video-card" href="watch.html?id=${encodeURIComponent(video.id)}">
+      <a class="overlay-video-card" href="?id=${encodeURIComponent(video.id)}">
         <div class="overlay-video-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
           ${thumbnailHTML}
           ${durationHTML}
@@ -145,7 +145,7 @@ function renderAlsoWatchVideos(items) {
       : "";
 
     return `
-      <a class="also-watch-card" href="watch.html?id=${encodeURIComponent(video.id)}">
+      <a class="also-watch-card" href="?id=${encodeURIComponent(video.id)}">
         <div class="also-watch-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
           ${thumbnailHTML}
           ${durationHTML}
