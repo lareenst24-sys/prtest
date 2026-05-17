@@ -81,7 +81,7 @@ function loadVideos() {
     `;
 
     card.addEventListener("click", () => {
-      window.location.href = `watch.html?id=${encodeURIComponent(video.id)}`;
+      window.location.href = `watch/?id=${encodeURIComponent(video.id)}`;
     });
 
     videoGrid.appendChild(card);
