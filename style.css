@@ -1032,3 +1032,14 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
     font-size: 24px;
   }
 }
+.logo-link {
+  color: #ffffff;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.logo-link:hover {
+  color: #ffffff;
+  text-decoration: none;
+  opacity: 0.9;
+}
