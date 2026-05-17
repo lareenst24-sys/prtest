@@ -9,17 +9,18 @@ const filterStatusText = document.getElementById("filterStatusText");
 const clearAllBtn = document.getElementById("clearAllBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 const showMissingBtn = document.getElementById("showMissingBtn");
-const importPublicVideosBtn = document.getElementById("importPublicVideosBtn");
 const saveAllDurationsBtn = document.getElementById("saveAllDurationsBtn");
 const exportVideosBtn = document.getElementById("exportVideosBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
-const MAX_UPLOAD_AT_ONCE = 300;
+const MAX_UPLOAD_AT_ONCE = 100;
 
 let currentFilter = "all";
 
+/* Auto-format duration while typing */
 document.addEventListener("input", (event) => {
   if (!event.target.classList.contains("duration-input")) return;
+
   event.target.value = autoFormatDuration(event.target.value);
 });
 
@@ -57,7 +58,7 @@ if (addVideosBtn) {
         title: cleanTitle(extracted.title),
         embed: extracted.embed,
         thumbnail: extracted.thumbnail || "",
-        duration: cleanDuration(extracted.duration)
+        duration: ""
       });
     });
 
@@ -73,12 +74,6 @@ if (addVideosBtn) {
     renderVideoList();
 
     let message = `${newVideos.length} video(s) added successfully.`;
-
-    const durationFoundCount = newVideos.filter(video => video.duration).length;
-
-    if (durationFoundCount > 0) {
-      message += `\n${durationFoundCount} duration(s) detected automatically.`;
-    }
 
     if (blocks.length >= MAX_UPLOAD_AT_ONCE) {
       message += `\nOnly the first ${MAX_UPLOAD_AT_ONCE} videos were processed.`;
@@ -103,12 +98,6 @@ if (showMissingBtn) {
   showMissingBtn.addEventListener("click", () => {
     currentFilter = "missing";
     renderVideoList();
-  });
-}
-
-if (importPublicVideosBtn) {
-  importPublicVideosBtn.addEventListener("click", () => {
-    importPublicVideos();
   });
 }
 
@@ -163,13 +152,13 @@ if (clearAllBtn) {
   });
 }
 
-/* =========================
-   SPLIT BULK INPUT
-========================= */
-
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
+  /*
+    For large multi-line embed blocks, separate videos with:
+    ---VIDEO---
+  */
   const separatedBlocks = trimmed
     .split("---VIDEO---")
     .map(block => block.trim())
@@ -179,12 +168,10 @@ function splitEmbedBlocks(text) {
     return separatedBlocks;
   }
 
-  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
-
-  if (iframeMatches && iframeMatches.length > 1) {
-    return iframeMatches.map(item => item.trim()).filter(Boolean);
-  }
-
+  /*
+    Best normal format:
+    One FULL embed code per line.
+  */
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -194,36 +181,37 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
+  /*
+    Fallback:
+    If many iframes are pasted in one giant line.
+  */
+  const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
+
+  if (iframeMatches && iframeMatches.length > 1) {
+    return iframeMatches.map(item => item.trim()).filter(Boolean);
+  }
+
   return [trimmed];
 }
 
-/* =========================
-   STRICT VIDEO EXTRACTOR
-
-   Saves only:
-   - embed/video link
-   - thumbnail link
-   - title
-   - duration if found
-========================= */
-
 function extractVideoData(input) {
-  const originalInput = String(input || "").trim();
+  const trimmed = input.trim();
 
-  let embedPart = originalInput;
+  let embedPart = trimmed;
   let manualThumbnail = "";
-  let manualTitle = "";
-  let manualDuration = "";
 
   /*
-    Optional manual format:
-    iframe/link || thumbnail || title || duration
+    OLD WORKING RULE:
+    From embed code we only extract:
+    - iframe src / video link
+    - thumbnail image link
+    - title
 
-    Example:
-    <iframe src="..."></iframe> || https://thumb.jpg || My Title || 12:45
+    Duration is manual from admin page.
   */
-  if (originalInput.includes("||")) {
-    const pieces = originalInput.split("||").map(piece => piece.trim());
+
+  if (trimmed.includes("||")) {
+    const pieces = trimmed.split("||").map(piece => piece.trim());
 
     embedPart = pieces[0] || "";
 
@@ -232,438 +220,119 @@ function extractVideoData(input) {
 
       if (!piece) continue;
 
-      if (!manualThumbnail && isValidLink(piece) && isSafeThumbnailUrl(piece)) {
-        manualThumbnail = decodeText(piece);
-        continue;
-      }
-
-      if (!manualDuration && cleanDuration(piece)) {
-        manualDuration = cleanDuration(piece);
-        continue;
-      }
-
-      if (!manualTitle && !isValidLink(piece)) {
-        manualTitle = cleanTitle(piece);
+      if (isValidLink(piece)) {
+        manualThumbnail = piece;
+        break;
       }
     }
   }
 
-  const cleanedHTML = removeDangerousAndExtraCode(embedPart);
-  const doc = new DOMParser().parseFromString(cleanedHTML, "text/html");
+  let embed = "";
+  let thumbnail = manualThumbnail;
+  let title = "";
 
-  let embed = extractEmbedLink(doc, cleanedHTML);
-  let thumbnail = manualThumbnail || extractThumbnailLink(doc, cleanedHTML);
-  let title = manualTitle || extractTitle(doc, cleanedHTML);
-  let duration = manualDuration || extractDuration(doc, cleanedHTML);
+  // Extract iframe src only
+  const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
-  return {
-    embed: isValidLink(embed) ? decodeText(embed) : "",
-    thumbnail: isValidLink(thumbnail) && isSafeThumbnailUrl(thumbnail) ? decodeText(thumbnail) : "",
-    title: cleanTitle(title),
-    duration: cleanDuration(duration)
-  };
-}
-
-function removeDangerousAndExtraCode(html) {
-  const clean = String(html || "");
-
-  return clean
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<button[\s\S]*?<\/button>/gi, "")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, "")
-    .replace(/<form[\s\S]*?<\/form>/gi, "");
-}
-
-function extractEmbedLink(doc, rawHTML) {
-  const iframe = doc.querySelector("iframe[src]");
-  const embed = doc.querySelector("embed[src]");
-  const video = doc.querySelector("video[src]");
-  const source = doc.querySelector("source[src]");
-
-  if (iframe && iframe.getAttribute("src")) {
-    return decodeText(iframe.getAttribute("src").trim());
+  if (iframeSrc && iframeSrc[1]) {
+    embed = decodeText(iframeSrc[1].trim());
+  } else if (isValidLink(embedPart)) {
+    embed = decodeText(embedPart);
   }
 
-  if (embed && embed.getAttribute("src")) {
-    return decodeText(embed.getAttribute("src").trim());
+  const doc = new DOMParser().parseFromString(embedPart, "text/html");
+
+  // Extract safe title only from title-like attributes
+  const titleAttr = embedPart.match(/title=["']([^"']+)["']/i);
+  if (titleAttr && titleAttr[1]) {
+    title = cleanTitle(titleAttr[1]);
   }
 
-  if (video && video.getAttribute("src")) {
-    return decodeText(video.getAttribute("src").trim());
+  const dataTitle = embedPart.match(/data-title=["']([^"']+)["']/i);
+  if (!title && dataTitle && dataTitle[1]) {
+    title = cleanTitle(dataTitle[1]);
   }
 
-  if (source && source.getAttribute("src")) {
-    return decodeText(source.getAttribute("src").trim());
+  const ariaLabel = embedPart.match(/aria-label=["']([^"']+)["']/i);
+  if (!title && ariaLabel && ariaLabel[1]) {
+    title = cleanTitle(ariaLabel[1]);
   }
 
-  if (isValidLink(rawHTML.trim())) {
-    return decodeText(rawHTML.trim());
+  const altTitle = embedPart.match(/alt=["']([^"']+)["']/i);
+  if (!title && altTitle && altTitle[1]) {
+    title = cleanTitle(altTitle[1]);
   }
 
-  const iframeSrcMatch = rawHTML.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+  // Extract thumbnail from common image/thumbnail attributes only
+  const imageSelectors = [
+    "img[src]",
+    "img[data-src]",
+    "[poster]",
+    "[data-poster]",
+    "[data-thumbnail]",
+    "[thumbnail]",
+    "[image]",
+    "[data-image]"
+  ];
 
-  if (iframeSrcMatch && iframeSrcMatch[1]) {
-    return decodeText(iframeSrcMatch[1].trim());
+  for (const selector of imageSelectors) {
+    const element = doc.querySelector(selector);
+    if (!element) continue;
+
+    const possibleThumb =
+      element.getAttribute("src") ||
+      element.getAttribute("data-src") ||
+      element.getAttribute("poster") ||
+      element.getAttribute("data-poster") ||
+      element.getAttribute("data-thumbnail") ||
+      element.getAttribute("thumbnail") ||
+      element.getAttribute("image") ||
+      element.getAttribute("data-image");
+
+    if (possibleThumb && isValidLink(possibleThumb)) {
+      thumbnail = decodeText(possibleThumb.trim());
+      break;
+    }
   }
 
-  return "";
-}
-
-function extractThumbnailLink(doc, rawHTML) {
-  const candidates = [];
-
-  const imageElements = Array.from(doc.querySelectorAll("img, video, [poster], [data-poster], [data-thumbnail], [thumbnail], [data-thumb], [thumb], [image], [data-image]"));
-
-  imageElements.forEach((element) => {
-    const attrsToCheck = [
-      "src",
-      "data-src",
-      "data-original",
-      "data-lazy-src",
-      "poster",
-      "data-poster",
-      "data-thumbnail",
-      "thumbnail",
-      "data-thumb",
-      "thumb",
-      "image",
-      "data-image"
+  // Regex thumbnail fallback
+  if (!thumbnail) {
+    const thumbPatterns = [
+      /data-thumbnail=["']([^"']+)["']/i,
+      /poster=["']([^"']+)["']/i,
+      /data-poster=["']([^"']+)["']/i,
+      /thumbnail=["']([^"']+)["']/i,
+      /image=["']([^"']+)["']/i,
+      /data-image=["']([^"']+)["']/i,
+      /<img[^>]*src=["']([^"']+)["']/i,
+      /background-image:\s*url\(["']?([^"')]+)["']?\)/i
     ];
 
-    attrsToCheck.forEach((attr) => {
-      const value = element.getAttribute(attr);
+    for (const pattern of thumbPatterns) {
+      const match = embedPart.match(pattern);
 
-      if (!value) return;
-
-      candidates.push({
-        url: decodeText(value.trim()),
-        context: getElementContext(element)
-      });
-    });
-  });
-
-  const regexPatterns = [
-    /poster=["']([^"']+)["']/i,
-    /data-poster=["']([^"']+)["']/i,
-    /data-thumbnail=["']([^"']+)["']/i,
-    /thumbnail=["']([^"']+)["']/i,
-    /data-thumb=["']([^"']+)["']/i,
-    /thumb=["']([^"']+)["']/i,
-    /image=["']([^"']+)["']/i,
-    /data-image=["']([^"']+)["']/i,
-    /<img[^>]*src=["']([^"']+)["']/i,
-    /background-image:\s*url\(["']?([^"')]+)["']?\)/i
-  ];
-
-  regexPatterns.forEach((pattern) => {
-    const match = rawHTML.match(pattern);
-
-    if (match && match[1]) {
-      candidates.push({
-        url: decodeText(match[1].trim()),
-        context: rawHTML
-      });
-    }
-  });
-
-  const imageUrlMatches = rawHTML.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/gi);
-
-  if (imageUrlMatches) {
-    imageUrlMatches.forEach((url) => {
-      candidates.push({
-        url: decodeText(url.trim()),
-        context: rawHTML
-      });
-    });
-  }
-
-  const safeCandidates = candidates.filter((candidate) => {
-    return (
-      isValidLink(candidate.url) &&
-      isSafeThumbnailUrl(candidate.url) &&
-      !looksLikeWatermark(candidate.url) &&
-      !looksLikeWatermark(candidate.context)
-    );
-  });
-
-  if (safeCandidates.length > 0) {
-    return safeCandidates[0].url;
-  }
-
-  return "";
-}
-
-function extractTitle(doc, rawHTML) {
-  const titleSources = [
-    doc.querySelector("iframe[title]")?.getAttribute("title"),
-    doc.querySelector("[data-title]")?.getAttribute("data-title"),
-    doc.querySelector("[aria-label]")?.getAttribute("aria-label"),
-    doc.querySelector("img[alt]")?.getAttribute("alt"),
-    doc.querySelector("[title]")?.getAttribute("title")
-  ];
-
-  for (const source of titleSources) {
-    const cleaned = cleanTitle(source);
-
-    if (cleaned && !looksLikeWatermark(cleaned)) {
-      return cleaned;
+      if (match && match[1] && isValidLink(match[1])) {
+        thumbnail = decodeText(match[1].trim());
+        break;
+      }
     }
   }
 
-  const titleMatch = rawHTML.match(/title=["']([^"']+)["']/i);
+  // Last fallback: first image-looking URL only
+  if (!thumbnail) {
+    const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
 
-  if (titleMatch && titleMatch[1]) {
-    const cleaned = cleanTitle(titleMatch[1]);
-
-    if (cleaned && !looksLikeWatermark(cleaned)) {
-      return cleaned;
+    if (imageUrl && imageUrl[0]) {
+      thumbnail = decodeText(imageUrl[0].trim());
     }
   }
 
-  return "";
+  return {
+    embed,
+    thumbnail,
+    title
+  };
 }
-
-/* =========================
-   AUTO DURATION EXTRACTOR
-========================= */
-
-function extractDuration(doc, rawHTML) {
-  const candidates = [];
-
-  /*
-    Read duration-like attributes first.
-    These are the cleanest sources.
-  */
-  const durationSelectors = [
-    "[duration]",
-    "[data-duration]",
-    "[data-time]",
-    "[data-length]",
-    "[length]",
-    "[aria-label]",
-    "[title]"
-  ];
-
-  durationSelectors.forEach((selector) => {
-    const elements = Array.from(doc.querySelectorAll(selector));
-
-    elements.forEach((element) => {
-      const attrsToCheck = [
-        "duration",
-        "data-duration",
-        "data-time",
-        "data-length",
-        "length",
-        "aria-label",
-        "title"
-      ];
-
-      attrsToCheck.forEach((attr) => {
-        const value = element.getAttribute(attr);
-
-        if (value) {
-          candidates.push(value);
-        }
-      });
-    });
-  });
-
-  /*
-    Read visible text from duration-like elements.
-  */
-  const classDurationElements = Array.from(doc.querySelectorAll(
-    ".duration, .time, .length, .video-duration, .video-time, [class*='duration'], [class*='time'], [class*='length']"
-  ));
-
-  classDurationElements.forEach((element) => {
-    if (element.textContent) {
-      candidates.push(element.textContent);
-    }
-  });
-
-  /*
-    Regex fallback:
-    Finds 1:23, 12:45, 1:02:33
-  */
-  const durationMatches = rawHTML.match(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g);
-
-  if (durationMatches) {
-    durationMatches.forEach(match => candidates.push(match));
-  }
-
-  /*
-    Also support text like:
-    duration="12:45"
-    data-duration="1:02:33"
-  */
-  const durationAttributePatterns = [
-    /duration=["']([^"']+)["']/i,
-    /data-duration=["']([^"']+)["']/i,
-    /data-time=["']([^"']+)["']/i,
-    /data-length=["']([^"']+)["']/i,
-    /length=["']([^"']+)["']/i
-  ];
-
-  durationAttributePatterns.forEach((pattern) => {
-    const match = rawHTML.match(pattern);
-
-    if (match && match[1]) {
-      candidates.push(match[1]);
-    }
-  });
-
-  for (const candidate of candidates) {
-    const clean = cleanDuration(candidate);
-
-    if (clean) {
-      return clean;
-    }
-  }
-
-  return "";
-}
-
-function getElementContext(element) {
-  if (!element) return "";
-
-  const parts = [
-    element.outerHTML || "",
-    element.className || "",
-    element.id || "",
-    element.getAttribute("alt") || "",
-    element.getAttribute("title") || "",
-    element.parentElement?.className || "",
-    element.parentElement?.id || ""
-  ];
-
-  return parts.join(" ").toLowerCase();
-}
-
-function looksLikeWatermark(value) {
-  if (!value) return false;
-
-  const text = String(value).toLowerCase();
-
-  const badWords = [
-    "watermark",
-    "water-mark",
-    "wm",
-    "logo",
-    "brand",
-    "branding",
-    "badge",
-    "overlay",
-    "corner",
-    "powered",
-    "promo",
-    "promotion",
-    "adchoices",
-    "adsby",
-    "sponsor",
-    "banner",
-    "icon",
-    "favicon",
-    "avatar",
-    "profile",
-    "button",
-    "play-button",
-    "close",
-    "share",
-    "download"
-  ];
-
-  return badWords.some(word => text.includes(word));
-}
-
-function isSafeThumbnailUrl(url) {
-  if (!isValidLink(url)) return false;
-
-  const clean = String(url).toLowerCase();
-
-  if (looksLikeWatermark(clean)) return false;
-
-  const imageLike =
-    clean.includes(".jpg") ||
-    clean.includes(".jpeg") ||
-    clean.includes(".png") ||
-    clean.includes(".webp") ||
-    clean.includes(".gif") ||
-    clean.includes("thumbnail") ||
-    clean.includes("thumb") ||
-    clean.includes("poster") ||
-    clean.includes("image");
-
-  return imageLike;
-}
-
-/* =========================
-   IMPORT PUBLIC videos.js
-========================= */
-
-function importPublicVideos() {
-  const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
-
-  if (publicVideos.length === 0) {
-    alert("No videos found in videos.js. Make sure adminprtest.html loads videos.js before admin.js.");
-    return;
-  }
-
-  const currentVideos = getVideos();
-
-  const cleanedPublicVideos = publicVideos
-    .map((video, index) => {
-      return {
-        id: video.id || `video-public-${index + 1}`,
-        title: cleanTitle(video.title),
-        embed: isValidLink(video.embed) ? decodeText(video.embed) : "",
-        thumbnail: isValidLink(video.thumbnail) && isSafeThumbnailUrl(video.thumbnail) ? decodeText(video.thumbnail) : "",
-        duration: cleanDuration(video.duration)
-      };
-    })
-    .filter(video => video.embed);
-
-  if (cleanedPublicVideos.length === 0) {
-    alert("videos.js was found, but no valid videos were imported.");
-    return;
-  }
-
-  const mergedVideos = mergeVideos(cleanedPublicVideos, currentVideos);
-
-  saveVideos(mergedVideos);
-  renderVideoList();
-
-  alert(`${cleanedPublicVideos.length} video(s) imported from videos.js.`);
-}
-
-function mergeVideos(importedVideos, existingVideos) {
-  const map = new Map();
-
-  existingVideos.forEach((video) => {
-    if (!video.embed) return;
-
-    const key = video.id || video.embed;
-
-    map.set(key, video);
-  });
-
-  importedVideos.forEach((video) => {
-    if (!video.embed) return;
-
-    const key = video.id || video.embed;
-
-    if (!map.has(key)) {
-      map.set(key, video);
-    }
-  });
-
-  return Array.from(map.values());
-}
-
-/* =========================
-   CLEANERS
-========================= */
 
 function cleanTitle(title) {
   if (!title) return "";
@@ -691,10 +360,7 @@ function cleanTitle(title) {
     clean.includes("</iframe>") ||
     clean.includes("src=") ||
     clean.includes("https://") ||
-    clean.includes("http://") ||
-    clean.includes("<script") ||
-    clean.includes("</script>") ||
-    looksLikeWatermark(clean)
+    clean.includes("http://")
   ) {
     return "";
   }
@@ -707,10 +373,12 @@ function autoFormatDuration(value) {
 
   if (!digits) return "";
 
+  // 37 -> 0:37
   if (digits.length <= 2) {
     return `0:${digits.padStart(2, "0")}`;
   }
 
+  // 2337 -> 23:37
   if (digits.length <= 4) {
     const minutes = digits.slice(0, -2);
     const seconds = digits.slice(-2);
@@ -718,6 +386,7 @@ function autoFormatDuration(value) {
     return `${Number(minutes)}:${seconds}`;
   }
 
+  // 14530 -> 1:45:30
   const hours = digits.slice(0, -4);
   const minutes = digits.slice(-4, -2);
   const seconds = digits.slice(-2);
@@ -728,38 +397,10 @@ function autoFormatDuration(value) {
 function cleanDuration(duration) {
   if (!duration) return "";
 
-  let clean = String(duration).trim();
+  const clean = String(duration).trim();
 
-  /*
-    If user types only numbers:
-    37 -> 0:37
-    2337 -> 23:37
-    14530 -> 1:45:30
-  */
-  if (/^\d+$/.test(clean)) {
-    clean = autoFormatDuration(clean);
-  }
-
-  /*
-    Accepts:
-    0:37
-    1:23
-    12:45
-    1:02:33
-  */
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
     return clean;
-  }
-
-  /*
-    Extract duration from longer text:
-    "Duration: 12:45"
-    "watch time 1:02:33"
-  */
-  const match = clean.match(/\b\d{1,2}:\d{2}(?::\d{2})?\b/);
-
-  if (match && match[0]) {
-    return match[0];
   }
 
   return "";
@@ -789,7 +430,6 @@ function getVideos() {
 
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.warn("Could not read videos from localStorage.", error);
     return [];
   }
 }
@@ -806,19 +446,15 @@ function isValidLink(link) {
   );
 }
 
-/* =========================
-   RENDER ADMIN VIDEO LIST
-========================= */
-
 function renderVideoList() {
   let videos = getVideos();
 
-  videos = videos.map((video, index) => {
+  videos = videos.map((video) => {
     return {
-      id: video.id || `video-${index + 1}`,
+      ...video,
       title: cleanTitle(video.title),
       duration: cleanDuration(video.duration),
-      thumbnail: isValidLink(video.thumbnail) && isSafeThumbnailUrl(video.thumbnail) ? decodeText(video.thumbnail) : "",
+      thumbnail: isValidLink(video.thumbnail) ? decodeText(video.thumbnail) : "",
       embed: isValidLink(video.embed) ? decodeText(video.embed) : ""
     };
   }).filter(video => video.embed);
@@ -827,7 +463,6 @@ function renderVideoList() {
 
   const totalVideos = videos.length;
   const missingThumbnailVideos = videos.filter(video => !video.thumbnail).length;
-  const missingDurationVideos = videos.filter(video => !video.duration).length;
 
   let displayVideos = videos;
 
@@ -844,7 +479,7 @@ function renderVideoList() {
   }
 
   if (videoCountText) {
-    videoCountText.textContent = `${totalVideos} videos saved • ${missingThumbnailVideos} missing thumbnails • ${missingDurationVideos} missing durations`;
+    videoCountText.textContent = `${totalVideos} videos saved • ${missingThumbnailVideos} missing thumbnails`;
   }
 
   if (!videoList) return;
@@ -864,10 +499,6 @@ function renderVideoList() {
       ? `<span class="thumb-ok">Thumbnail found</span>`
       : `<span class="thumb-missing">No thumbnail</span>`;
 
-    const durationStatus = video.duration
-      ? `<span class="thumb-ok">Duration found: ${escapeHTML(video.duration)}</span>`
-      : `<span class="thumb-missing">No duration</span>`;
-
     const durationValue = video.duration || "";
 
     item.innerHTML = `
@@ -880,9 +511,6 @@ function renderVideoList() {
             title="Video preview"
             loading="lazy"
             frameborder="0"
-            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-            allow="fullscreen; picture-in-picture; encrypted-media"
-            referrerpolicy="no-referrer"
             allowfullscreen>
           </iframe>
         </div>
@@ -890,7 +518,6 @@ function renderVideoList() {
         <div class="admin-video-info">
           <strong>${video.title ? escapeHTML(video.title) : "Video saved"}</strong>
           <p class="admin-help">${thumbStatus}</p>
-          <p class="admin-help">${durationStatus}</p>
 
           <div class="duration-edit-row">
             <input 
@@ -918,10 +545,6 @@ function renderVideoList() {
     videoList.appendChild(moreText);
   }
 }
-
-/* =========================
-   DURATION
-========================= */
 
 function saveDuration(id) {
   const input = document.getElementById(`duration-${id}`);
@@ -1003,10 +626,6 @@ function saveAllDurations() {
   alert(`${savedCount} duration(s) saved. ${skippedCount} skipped.`);
 }
 
-/* =========================
-   EXPORT
-========================= */
-
 function exportVideosJS() {
   const videos = getVideos()
     .map((video, index) => {
@@ -1014,7 +633,7 @@ function exportVideosJS() {
         id: video.id || `video-${index + 1}`,
         title: cleanTitle(video.title),
         embed: isValidLink(video.embed) ? decodeText(video.embed) : "",
-        thumbnail: isValidLink(video.thumbnail) && isSafeThumbnailUrl(video.thumbnail) ? decodeText(video.thumbnail) : "",
+        thumbnail: isValidLink(video.thumbnail) ? decodeText(video.thumbnail) : "",
         duration: cleanDuration(video.duration)
       };
     })
@@ -1046,10 +665,6 @@ function exportVideosJS() {
   alert(`${videos.length} video(s) exported as videos.js`);
 }
 
-/* =========================
-   DELETE
-========================= */
-
 function deleteVideo(id) {
   let videos = getVideos();
 
@@ -1059,10 +674,6 @@ function deleteVideo(id) {
 
   renderVideoList();
 }
-
-/* =========================
-   ESCAPE
-========================= */
 
 function escapeHTML(text) {
   const div = document.createElement("div");
