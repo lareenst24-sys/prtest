@@ -4,22 +4,24 @@ const videoGrid = document.getElementById("videoGrid");
 const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
 
 // Private/test videos from admin localStorage
-const localVideos = JSON.parse(localStorage.getItem("videos")) || [];
+const localVideos = safeGetLocalVideos();
 
 // Combine both lists
 let savedVideos = [...localVideos, ...publicVideos];
 
 // Clean saved videos before rendering
-savedVideos = savedVideos.map((video, index) => {
-  return {
-    ...video,
-    id: video.id || `video-${index + 1}`,
-    title: cleanTitle(video.title),
-    thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
-    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
-    duration: cleanDuration(video.duration)
-  };
-}).filter((video) => video.embed);
+savedVideos = savedVideos
+  .map((video, index) => {
+    return {
+      ...video,
+      id: video.id || `video-${index + 1}`,
+      title: cleanTitle(video.title),
+      thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
+      embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
+      duration: cleanDuration(video.duration)
+    };
+  })
+  .filter((video) => video.embed);
 
 // Do NOT overwrite localStorage with public videos.
 // localStorage stays private for admin/testing only.
@@ -29,7 +31,9 @@ const videosPerLoad = isMobile ? 14 : 20;
 
 let currentIndex = 0;
 
-if (savedVideos.length === 0) {
+if (!videoGrid) {
+  console.error("videoGrid element not found. Make sure index.html has: <div id='videoGrid'>");
+} else if (savedVideos.length === 0) {
   videoGrid.innerHTML = `<p class="empty-message">No videos added yet.</p>`;
 } else {
   loadVideos();
@@ -91,6 +95,12 @@ function loadVideos() {
 }
 
 function createLoadMoreButton() {
+  const existingButton = document.querySelector(".load-more-wrapper");
+
+  if (existingButton) {
+    existingButton.remove();
+  }
+
   const loadMoreSpot = document.getElementById("loadMoreSpot");
 
   const loadMoreWrapper = document.createElement("div");
@@ -113,15 +123,29 @@ function createLoadMoreButton() {
   // This places Load More above the ads.
   if (loadMoreSpot) {
     loadMoreSpot.appendChild(loadMoreWrapper);
-  } else {
-    const content = document.querySelector(".content");
-    const firstAd = document.querySelector(".ad-slot");
+    return;
+  }
 
-    if (content && firstAd) {
-      content.insertBefore(loadMoreWrapper, firstAd);
-    } else if (content) {
-      content.appendChild(loadMoreWrapper);
-    }
+  // Fallback if loadMoreSpot is missing from index.html
+  const content = document.querySelector(".content");
+  const firstAd = document.querySelector(".ad-slot");
+
+  if (content && firstAd) {
+    content.insertBefore(loadMoreWrapper, firstAd);
+  } else if (content) {
+    content.appendChild(loadMoreWrapper);
+  }
+}
+
+function safeGetLocalVideos() {
+  try {
+    const raw = localStorage.getItem("videos");
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Local videos could not be read. Using empty localStorage list.", error);
+    return [];
   }
 }
 
