@@ -25,8 +25,8 @@ videos = videos
   })
   .filter((video) => video.embed);
 
-// Do NOT save combined videos back into localStorage.
-// localStorage stays private for admin/testing only.
+// Remove duplicate IDs so suggestions do not repeat weirdly
+videos = removeDuplicateVideos(videos);
 
 const currentVideo = videos.find((item) => item.id === videoId);
 
@@ -39,7 +39,7 @@ if (!watchContainer) {
     <a href="../index.html" class="back-link">Go back home</a>
   `;
 } else {
-  // Random every page load / refresh / different video open
+  // Random every page open / refresh / different video
   const suggestedVideos = getRandomVideos(currentVideo.id, 9);
   const alsoWatchVideos = getRandomVideos(currentVideo.id, 12);
 
@@ -113,8 +113,9 @@ function getRandomVideos(currentId, limit) {
 
   const shuffledVideos = [...availableVideos];
 
+  // Strong random shuffle
   for (let i = shuffledVideos.length - 1; i > 0; i--) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
+    const randomIndex = getRandomNumber(i + 1);
 
     const temp = shuffledVideos[i];
     shuffledVideos[i] = shuffledVideos[randomIndex];
@@ -122,6 +123,16 @@ function getRandomVideos(currentId, limit) {
   }
 
   return shuffledVideos.slice(0, limit);
+}
+
+function getRandomNumber(max) {
+  if (window.crypto && window.crypto.getRandomValues) {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return array[0] % max;
+  }
+
+  return Math.floor(Math.random() * max);
 }
 
 function renderMiniVideos(items) {
@@ -189,6 +200,21 @@ function renderAlsoWatchVideos(items) {
       </a>
     `;
   }).join("");
+}
+
+function removeDuplicateVideos(videoList) {
+  const seen = new Set();
+
+  return videoList.filter((video) => {
+    if (!video.id) return false;
+
+    if (seen.has(video.id)) {
+      return false;
+    }
+
+    seen.add(video.id);
+    return true;
+  });
 }
 
 function safeGetLocalVideos() {
