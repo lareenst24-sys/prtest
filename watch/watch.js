@@ -25,7 +25,7 @@ videos = videos
   })
   .filter((video) => video.embed);
 
-// Remove duplicate IDs so suggestions do not repeat weirdly
+// Remove duplicate IDs
 videos = removeDuplicateVideos(videos);
 
 const currentVideo = videos.find((item) => item.id === videoId);
@@ -39,7 +39,6 @@ if (!watchContainer) {
     <a href="../index.html" class="back-link">Go back home</a>
   `;
 } else {
-  // Random every page open / refresh / different video
   const suggestedVideos = getRandomVideos(currentVideo.id, 9);
   const alsoWatchVideos = getRandomVideos(currentVideo.id, 12);
 
@@ -53,8 +52,9 @@ if (!watchContainer) {
               src="${escapeAttribute(currentVideo.embed)}" 
               title="${escapeAttribute(currentVideo.title || "Video")}" 
               frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              referrerpolicy="no-referrer-when-downgrade"
+              sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+              allow="fullscreen; picture-in-picture; encrypted-media"
+              referrerpolicy="no-referrer"
               allowfullscreen>
             </iframe>
           </div>
@@ -109,7 +109,6 @@ if (!watchContainer) {
 
 function getRandomVideos(currentId, limit) {
   const availableVideos = videos.filter((video) => video.id !== currentId);
-
   const shuffledVideos = [...availableVideos];
 
   for (let i = shuffledVideos.length - 1; i > 0; i--) {
