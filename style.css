@@ -1032,3 +1032,29 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
     font-size: 24px;
   }
 }
+/* =========================
+   CLICKABLE LOGO FIX
+========================= */
+
+.logo-button {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.logo-button:visited,
+.logo-button:active,
+.logo-button:focus {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+.logo-button:hover {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  opacity: 0.9;
+}
