@@ -53,9 +53,8 @@ if (!watchContainer) {
               src="${escapeAttribute(currentVideo.embed)}" 
               title="${escapeAttribute(currentVideo.title || "Video")}" 
               frameborder="0"
-              sandbox="allow-scripts allow-same-origin allow-presentation"
-              allow="fullscreen; picture-in-picture; encrypted-media"
-              referrerpolicy="no-referrer"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              referrerpolicy="no-referrer-when-downgrade"
               allowfullscreen>
             </iframe>
           </div>
@@ -113,7 +112,6 @@ function getRandomVideos(currentId, limit) {
 
   const shuffledVideos = [...availableVideos];
 
-  // Strong random shuffle
   for (let i = shuffledVideos.length - 1; i > 0; i--) {
     const randomIndex = getRandomNumber(i + 1);
 
