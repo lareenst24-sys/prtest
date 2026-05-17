@@ -7,36 +7,41 @@ const videoId = urlParams.get("id");
 const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
 
 // Private/test videos from admin localStorage
-const localVideos = JSON.parse(localStorage.getItem("videos")) || [];
+const localVideos = safeGetLocalVideos();
 
 // Combine both lists
 let videos = [...localVideos, ...publicVideos];
 
-videos = videos.map((video, index) => {
-  return {
-    ...video,
-    id: video.id || `video-${index + 1}`,
-    title: cleanTitle(video.title),
-    thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
-    embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
-    duration: cleanDuration(video.duration)
-  };
-}).filter((video) => video.embed);
+videos = videos
+  .map((video, index) => {
+    return {
+      ...video,
+      id: video.id || `video-${index + 1}`,
+      title: cleanTitle(video.title),
+      thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
+      embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
+      duration: cleanDuration(video.duration)
+    };
+  })
+  .filter((video) => video.embed);
 
 // Do NOT save combined videos back into localStorage.
 // localStorage stays private for admin/testing only.
 
 const currentVideo = videos.find((item) => item.id === videoId);
 
-if (!currentVideo) {
+if (!watchContainer) {
+  console.error("watchContainer not found.");
+} else if (!currentVideo) {
   watchContainer.innerHTML = `
     <h2>Video not found</h2>
     <p>This video does not exist or was removed.</p>
     <a href="../index.html" class="back-link">Go back home</a>
   `;
 } else {
-  const suggestedVideos = getSuggestedVideos(currentVideo.id, 9);
-  const alsoWatchVideos = getSuggestedVideos(currentVideo.id, 12);
+  // Random every page load / refresh / different video open
+  const suggestedVideos = getRandomVideos(currentVideo.id, 9);
+  const alsoWatchVideos = getRandomVideos(currentVideo.id, 12);
 
   watchContainer.innerHTML = `
     <div class="watch-layout">
@@ -90,19 +95,33 @@ if (!currentVideo) {
   const closeOverlayBtn = document.getElementById("closeOverlayBtn");
   const videoOverlay = document.getElementById("videoOverlay");
 
-  moreVideosBtn.addEventListener("click", () => {
-    videoOverlay.classList.add("active");
-  });
+  if (moreVideosBtn && videoOverlay) {
+    moreVideosBtn.addEventListener("click", () => {
+      videoOverlay.classList.add("active");
+    });
+  }
 
-  closeOverlayBtn.addEventListener("click", () => {
-    videoOverlay.classList.remove("active");
-  });
+  if (closeOverlayBtn && videoOverlay) {
+    closeOverlayBtn.addEventListener("click", () => {
+      videoOverlay.classList.remove("active");
+    });
+  }
 }
 
-function getSuggestedVideos(currentId, limit) {
-  return videos
-    .filter((video) => video.id !== currentId)
-    .slice(0, limit);
+function getRandomVideos(currentId, limit) {
+  const availableVideos = videos.filter((video) => video.id !== currentId);
+
+  const shuffledVideos = [...availableVideos];
+
+  for (let i = shuffledVideos.length - 1; i > 0; i--) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+
+    const temp = shuffledVideos[i];
+    shuffledVideos[i] = shuffledVideos[randomIndex];
+    shuffledVideos[randomIndex] = temp;
+  }
+
+  return shuffledVideos.slice(0, limit);
 }
 
 function renderMiniVideos(items) {
@@ -112,7 +131,13 @@ function renderMiniVideos(items) {
 
   return items.map((video) => {
     const thumbnailHTML = video.thumbnail
-      ? `<img src="${escapeAttribute(video.thumbnail)}" alt="Video thumbnail" onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');">`
+      ? `
+        <img 
+          src="${escapeAttribute(video.thumbnail)}" 
+          alt="Video thumbnail" 
+          onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
+        >
+      `
       : "";
 
     const durationHTML = video.duration
@@ -137,7 +162,13 @@ function renderAlsoWatchVideos(items) {
 
   return items.map((video) => {
     const thumbnailHTML = video.thumbnail
-      ? `<img src="${escapeAttribute(video.thumbnail)}" alt="Video thumbnail" onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');">`
+      ? `
+        <img 
+          src="${escapeAttribute(video.thumbnail)}" 
+          alt="Video thumbnail" 
+          onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
+        >
+      `
       : "";
 
     const durationHTML = video.duration
@@ -158,6 +189,18 @@ function renderAlsoWatchVideos(items) {
       </a>
     `;
   }).join("");
+}
+
+function safeGetLocalVideos() {
+  try {
+    const raw = localStorage.getItem("videos");
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Local videos could not be read. Using empty localStorage list.", error);
+    return [];
+  }
 }
 
 function cleanTitle(title) {
