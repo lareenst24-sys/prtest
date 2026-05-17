@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ALDZONE</title>
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
 
@@ -26,48 +26,8 @@
         <h2>Games</h2>
       </div>
 
-      <div class="games-row">
-
-        <!-- GAME 1 -->
-        <a class="game-card-small" href="https://network.nutaku.net/images/lp/lust-goddess/thumb-survey/1/?ats=eyJhIjoxNjg2ODU1LCJjIjo2NDM4MTYxNiwibiI6MSwicyI6MSwiZSI6MTA5MTMsInAiOjJ9" target="_blank" rel="noopener noreferrer">
-          <div class="game-card-thumb">
-            <img src="PASTE_IMAGE_LINK_HERE" alt="Game">
-          </div>
-          <h3>Game Name</h3>
-        </a>
-
-        <!-- GAME 2 -->
-        <a class="game-card-small" href="PASTE_AFFILIATE_LINK_HERE" target="_blank" rel="noopener noreferrer">
-          <div class="game-card-thumb">
-            <img src="PASTE_IMAGE_LINK_HERE" alt="Game">
-          </div>
-          <h3>Game Name</h3>
-        </a>
-
-        <!-- GAME 3 -->
-        <a class="game-card-small" href="PASTE_AFFILIATE_LINK_HERE" target="_blank" rel="noopener noreferrer">
-          <div class="game-card-thumb">
-            <img src="PASTE_IMAGE_LINK_HERE" alt="Game">
-          </div>
-          <h3>Game Name</h3>
-        </a>
-
-        <!-- GAME 4 -->
-        <a class="game-card-small" href="PASTE_AFFILIATE_LINK_HERE" target="_blank" rel="noopener noreferrer">
-          <div class="game-card-thumb">
-            <img src="PASTE_IMAGE_LINK_HERE" alt="Game">
-          </div>
-          <h3>Game Name</h3>
-        </a>
-
-        <!-- GAME 5 -->
-        <a class="game-card-small" href="PASTE_AFFILIATE_LINK_HERE" target="_blank" rel="noopener noreferrer">
-          <div class="game-card-thumb">
-            <img src="PASTE_IMAGE_LINK_HERE" alt="Game">
-          </div>
-          <h3>Game Name</h3>
-        </a>
-
+      <div class="games-row" id="gamesGrid">
+        <!-- Games will load here automatically from games.js -->
       </div>
     </section>
 
@@ -98,7 +58,51 @@
     <p>© 2026 ALDZONE. All rights reserved.</p>
   </footer>
 
+  <script src="games.js"></script>
   <script src="videos.js"></script>
+  <script>
+    const gamesGrid = document.getElementById("gamesGrid");
+    const games = Array.isArray(window.siteGames) ? window.siteGames : [];
+
+    if (!gamesGrid) {
+      console.error("gamesGrid not found.");
+    } else if (games.length === 0) {
+      gamesGrid.innerHTML = `<p class="empty-message">No games added yet.</p>`;
+    } else {
+      gamesGrid.innerHTML = games.map((game) => {
+        const title = escapeHTML(game.title || "Game");
+        const link = escapeAttribute(game.link || "#");
+        const thumbnail = escapeAttribute(game.thumbnail || "");
+
+        return `
+          <a class="game-card-small" href="${link}" target="_blank" rel="noopener noreferrer">
+            <div class="game-card-thumb ${thumbnail ? "" : "thumbnail-failed"}">
+              ${
+                thumbnail
+                  ? `<img src="${thumbnail}" alt="${title}" onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');">`
+                  : ""
+              }
+            </div>
+            <h3>${title}</h3>
+          </a>
+        `;
+      }).join("");
+    }
+
+    function escapeHTML(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function escapeAttribute(text) {
+      return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
