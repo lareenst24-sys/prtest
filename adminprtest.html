@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upload - ALDZONE</title>
-  <link rel="stylesheet" href="style.css?v=18" />
+  <link rel="stylesheet" href="style.css?v=19" />
 </head>
 <body>
 
@@ -49,7 +49,7 @@ Optional thumbnail format:
 
         <div class="admin-actions">
           <button id="addVideosBtn">Add Videos</button>
-          <button id="openDownloadPopupBtn">Download Videos</button>
+          <button id="openSavedDownloadPopupBtn">Download Saved Videos</button>
         </div>
       </div>
 
@@ -80,52 +80,34 @@ Optional thumbnail format:
 
   </main>
 
-  <!-- DOWNLOAD POPUP -->
-  <div class="download-popup" id="downloadPopup">
+  <!-- SAVED VIDEOS DOWNLOAD POPUP -->
+  <div class="download-popup" id="savedDownloadPopup">
     <div class="download-popup-card">
 
       <div class="download-popup-header">
         <div>
-          <h2>Download Videos</h2>
-          <p>Paste code here. Only direct video file links will be detected.</p>
+          <h2>Download Saved Videos</h2>
+          <p>Shows your already uploaded videos. Direct video files can be downloaded. Iframe embeds are shown but cannot be downloaded directly.</p>
         </div>
 
-        <button id="closeDownloadPopupBtn" class="download-close-btn">×</button>
+        <button id="closeSavedDownloadPopupBtn" class="download-close-btn">×</button>
       </div>
-
-      <textarea 
-        id="downloadCodeInput" 
-        class="big-upload-box download-code-box"
-        placeholder='Paste code here.
-
-This popup only detects direct video files like:
-https://example.com/video.mp4
-https://example.com/video.webm
-https://example.com/video.mov
-
-It ignores:
-thumbnails
-iframes without direct video files
-scripts
-watermarks
-buttons
-random links'>
-      </textarea>
 
       <div class="download-popup-actions">
-        <button id="scanDownloadVideosBtn">Scan Videos</button>
-        <button id="selectAllDownloadBtn">Select All</button>
-        <button id="clearDownloadSelectionBtn">Clear Selection</button>
-        <button id="downloadSelectedVideosBtn">Download Selected</button>
+        <button id="refreshSavedDownloadListBtn">Refresh List</button>
+        <button id="selectAllSavedDownloadsBtn">Select All Downloadable</button>
+        <button id="clearSavedDownloadsBtn">Clear Selection</button>
+        <button id="downloadSelectedSavedVideosBtn">Download Selected</button>
       </div>
 
-      <p id="downloadStatusText" class="admin-help">No videos scanned yet.</p>
+      <p id="savedDownloadStatusText" class="admin-help">No saved videos loaded yet.</p>
 
-      <div id="downloadVideoList" class="download-video-list"></div>
+      <div id="savedDownloadVideoList" class="download-video-list"></div>
 
     </div>
   </div>
 
+  <script src="videos.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
