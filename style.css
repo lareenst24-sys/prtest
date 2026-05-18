@@ -1058,3 +1058,129 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
   text-decoration: none !important;
   opacity: 0.9;
 }
+/* =========================
+   DOWNLOAD POPUP
+========================= */
+
+.download-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.download-popup.active {
+  display: flex;
+}
+
+.download-popup-card {
+  width: 100%;
+  max-width: 980px;
+  max-height: 92vh;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 22px;
+  overflow: auto;
+}
+
+.download-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.download-popup-header h2 {
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.download-popup-header p {
+  color: #9d9d9d;
+  font-size: 14px;
+}
+
+.download-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.download-code-box {
+  min-height: 220px !important;
+  max-height: 260px !important;
+}
+
+.download-popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.download-video-list {
+  margin-top: 12px;
+}
+
+.download-video-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-top: 1px solid #292929;
+  cursor: pointer;
+}
+
+.download-video-item input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: #ffffff;
+}
+
+.download-video-info {
+  min-width: 0;
+}
+
+.download-video-info strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.download-video-info span {
+  display: block;
+  color: #ffffff;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.download-video-info p {
+  color: #9d9d9d;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+@media (max-width: 700px) {
+  .download-popup {
+    padding: 10px;
+  }
+
+  .download-popup-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .download-popup-actions button {
+    width: 100%;
+  }
+}
