@@ -13,9 +13,21 @@ const saveAllDurationsBtn = document.getElementById("saveAllDurationsBtn");
 const exportVideosBtn = document.getElementById("exportVideosBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
+const openDownloadPopupBtn = document.getElementById("openDownloadPopupBtn");
+const closeDownloadPopupBtn = document.getElementById("closeDownloadPopupBtn");
+const downloadPopup = document.getElementById("downloadPopup");
+const downloadCodeInput = document.getElementById("downloadCodeInput");
+const scanDownloadVideosBtn = document.getElementById("scanDownloadVideosBtn");
+const selectAllDownloadBtn = document.getElementById("selectAllDownloadBtn");
+const clearDownloadSelectionBtn = document.getElementById("clearDownloadSelectionBtn");
+const downloadSelectedVideosBtn = document.getElementById("downloadSelectedVideosBtn");
+const downloadVideoList = document.getElementById("downloadVideoList");
+const downloadStatusText = document.getElementById("downloadStatusText");
+
 const MAX_UPLOAD_AT_ONCE = 100;
 
 let currentFilter = "all";
+let detectedDownloadVideos = [];
 
 /* Auto-format duration while typing */
 document.addEventListener("input", (event) => {
@@ -152,13 +164,262 @@ if (clearAllBtn) {
   });
 }
 
+/* =========================
+   DOWNLOAD POPUP LOGIC
+========================= */
+
+if (openDownloadPopupBtn) {
+  openDownloadPopupBtn.addEventListener("click", () => {
+    openDownloadPopup();
+  });
+}
+
+if (closeDownloadPopupBtn) {
+  closeDownloadPopupBtn.addEventListener("click", () => {
+    closeDownloadPopup();
+  });
+}
+
+if (downloadPopup) {
+  downloadPopup.addEventListener("click", (event) => {
+    if (event.target === downloadPopup) {
+      closeDownloadPopup();
+    }
+  });
+}
+
+if (scanDownloadVideosBtn) {
+  scanDownloadVideosBtn.addEventListener("click", () => {
+    scanDownloadVideos();
+  });
+}
+
+if (selectAllDownloadBtn) {
+  selectAllDownloadBtn.addEventListener("click", () => {
+    const checkboxes = document.querySelectorAll(".download-video-checkbox");
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = true;
+    });
+  });
+}
+
+if (clearDownloadSelectionBtn) {
+  clearDownloadSelectionBtn.addEventListener("click", () => {
+    const checkboxes = document.querySelectorAll(".download-video-checkbox");
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+  });
+}
+
+if (downloadSelectedVideosBtn) {
+  downloadSelectedVideosBtn.addEventListener("click", () => {
+    downloadSelectedVideos();
+  });
+}
+
+function openDownloadPopup() {
+  if (!downloadPopup) return;
+
+  downloadPopup.classList.add("active");
+
+  if (downloadCodeInput && bulkEmbedInput && bulkEmbedInput.value.trim()) {
+    downloadCodeInput.value = bulkEmbedInput.value.trim();
+  }
+}
+
+function closeDownloadPopup() {
+  if (!downloadPopup) return;
+
+  downloadPopup.classList.remove("active");
+}
+
+function scanDownloadVideos() {
+  const rawCode = downloadCodeInput ? downloadCodeInput.value.trim() : "";
+
+  if (!rawCode) {
+    alert("Paste code first.");
+    return;
+  }
+
+  detectedDownloadVideos = extractDirectVideoLinks(rawCode);
+
+  renderDownloadVideos();
+
+  if (downloadStatusText) {
+    downloadStatusText.textContent = `${detectedDownloadVideos.length} direct video file(s) found.`;
+  }
+}
+
+function extractDirectVideoLinks(code) {
+  const cleanCode = String(code || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+
+  const found = [];
+
+  const doc = new DOMParser().parseFromString(cleanCode, "text/html");
+
+  const videoSources = Array.from(doc.querySelectorAll("video[src], source[src], a[href]"));
+
+  videoSources.forEach((element) => {
+    const src = element.getAttribute("src") || element.getAttribute("href");
+
+    if (src && isDirectVideoFile(src)) {
+      found.push(decodeText(src.trim()));
+    }
+  });
+
+  const directVideoMatches = cleanCode.match(/https?:\/\/[^\s"'<>]+?\.(mp4|webm|mov|m4v|ogg)(\?[^\s"'<>]*)?/gi);
+
+  if (directVideoMatches) {
+    directVideoMatches.forEach((url) => {
+      if (isDirectVideoFile(url)) {
+        found.push(decodeText(url.trim()));
+      }
+    });
+  }
+
+  const unique = Array.from(new Set(found));
+
+  return unique.map((url, index) => {
+    return {
+      id: `download-video-${index + 1}`,
+      url,
+      filename: makeVideoFilename(url, index + 1)
+    };
+  });
+}
+
+function isDirectVideoFile(url) {
+  if (!isValidLink(url)) return false;
+
+  const clean = String(url).toLowerCase();
+
+  const allowed =
+    clean.includes(".mp4") ||
+    clean.includes(".webm") ||
+    clean.includes(".mov") ||
+    clean.includes(".m4v") ||
+    clean.includes(".ogg");
+
+  if (!allowed) return false;
+
+  const blockedWords = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".gif",
+    "thumbnail",
+    "thumb",
+    "poster",
+    "image",
+    "logo",
+    "watermark",
+    "banner",
+    "ad",
+    "ads",
+    "script"
+  ];
+
+  return !blockedWords.some((word) => clean.includes(word));
+}
+
+function makeVideoFilename(url, index) {
+  try {
+    const cleanUrl = decodeText(url);
+    const urlObject = new URL(cleanUrl);
+    const pathname = urlObject.pathname;
+    const lastPart = pathname.split("/").filter(Boolean).pop();
+
+    if (lastPart && lastPart.includes(".")) {
+      return sanitizeFilename(lastPart);
+    }
+  } catch (error) {
+    // fallback below
+  }
+
+  return `video-${index}.mp4`;
+}
+
+function sanitizeFilename(name) {
+  return String(name || "video.mp4")
+    .replace(/[<>:"/\\|?*]+/g, "-")
+    .replace(/\s+/g, "-")
+    .slice(0, 120);
+}
+
+function renderDownloadVideos() {
+  if (!downloadVideoList) return;
+
+  if (detectedDownloadVideos.length === 0) {
+    downloadVideoList.innerHTML = `
+      <p class="admin-help">
+        No direct downloadable video files found. Normal iframe embed links cannot be downloaded unless the code contains a direct .mp4/.webm/.mov file.
+      </p>
+    `;
+    return;
+  }
+
+  downloadVideoList.innerHTML = detectedDownloadVideos.map((video, index) => {
+    return `
+      <label class="download-video-item">
+        <input 
+          type="checkbox" 
+          class="download-video-checkbox" 
+          value="${escapeAttribute(video.url)}"
+          data-filename="${escapeAttribute(video.filename)}"
+          checked
+        >
+
+        <div class="download-video-info">
+          <strong>Video ${index + 1}</strong>
+          <span>${escapeHTML(video.filename)}</span>
+          <p>${escapeHTML(video.url)}</p>
+        </div>
+      </label>
+    `;
+  }).join("");
+}
+
+function downloadSelectedVideos() {
+  const selected = Array.from(document.querySelectorAll(".download-video-checkbox:checked"));
+
+  if (selected.length === 0) {
+    alert("Select at least one video to download.");
+    return;
+  }
+
+  selected.forEach((checkbox, index) => {
+    const url = checkbox.value;
+    const filename = checkbox.dataset.filename || `video-${index + 1}.mp4`;
+
+    setTimeout(() => {
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = filename;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, index * 500);
+  });
+
+  alert(`${selected.length} download(s) started. If your browser blocks some downloads, allow multiple downloads for this site.`);
+}
+
+/* =========================
+   UPLOAD PARSER
+========================= */
+
 function splitEmbedBlocks(text) {
   const trimmed = text.trim();
 
-  /*
-    For large multi-line embed blocks, separate videos with:
-    ---VIDEO---
-  */
   const separatedBlocks = trimmed
     .split("---VIDEO---")
     .map(block => block.trim())
@@ -168,10 +429,6 @@ function splitEmbedBlocks(text) {
     return separatedBlocks;
   }
 
-  /*
-    Best normal format:
-    One FULL embed code per line.
-  */
   const lines = trimmed
     .split("\n")
     .map(line => line.trim())
@@ -181,10 +438,6 @@ function splitEmbedBlocks(text) {
     return lines;
   }
 
-  /*
-    Fallback:
-    If many iframes are pasted in one giant line.
-  */
   const iframeMatches = trimmed.match(/<iframe[\s\S]*?<\/iframe>(?:\s*\|\|[^\n\r]+)?/gi);
 
   if (iframeMatches && iframeMatches.length > 1) {
@@ -199,16 +452,6 @@ function extractVideoData(input) {
 
   let embedPart = trimmed;
   let manualThumbnail = "";
-
-  /*
-    OLD WORKING RULE:
-    From embed code we only extract:
-    - iframe src / video link
-    - thumbnail image link
-    - title
-
-    Duration is manual from admin page.
-  */
 
   if (trimmed.includes("||")) {
     const pieces = trimmed.split("||").map(piece => piece.trim());
@@ -231,7 +474,6 @@ function extractVideoData(input) {
   let thumbnail = manualThumbnail;
   let title = "";
 
-  // Extract iframe src only
   const iframeSrc = embedPart.match(/<iframe[^>]*src=["']([^"']+)["']/i);
 
   if (iframeSrc && iframeSrc[1]) {
@@ -242,7 +484,6 @@ function extractVideoData(input) {
 
   const doc = new DOMParser().parseFromString(embedPart, "text/html");
 
-  // Extract safe title only from title-like attributes
   const titleAttr = embedPart.match(/title=["']([^"']+)["']/i);
   if (titleAttr && titleAttr[1]) {
     title = cleanTitle(titleAttr[1]);
@@ -263,7 +504,6 @@ function extractVideoData(input) {
     title = cleanTitle(altTitle[1]);
   }
 
-  // Extract thumbnail from common image/thumbnail attributes only
   const imageSelectors = [
     "img[src]",
     "img[data-src]",
@@ -295,7 +535,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Regex thumbnail fallback
   if (!thumbnail) {
     const thumbPatterns = [
       /data-thumbnail=["']([^"']+)["']/i,
@@ -318,7 +557,6 @@ function extractVideoData(input) {
     }
   }
 
-  // Last fallback: first image-looking URL only
   if (!thumbnail) {
     const imageUrl = embedPart.match(/https?:\/\/[^\s"'<>]+?\.(jpg|jpeg|png|webp|gif)(\?[^\s"'<>]*)?/i);
 
@@ -333,6 +571,10 @@ function extractVideoData(input) {
     title
   };
 }
+
+/* =========================
+   CLEANERS
+========================= */
 
 function cleanTitle(title) {
   if (!title) return "";
@@ -373,12 +615,10 @@ function autoFormatDuration(value) {
 
   if (!digits) return "";
 
-  // 37 -> 0:37
   if (digits.length <= 2) {
     return `0:${digits.padStart(2, "0")}`;
   }
 
-  // 2337 -> 23:37
   if (digits.length <= 4) {
     const minutes = digits.slice(0, -2);
     const seconds = digits.slice(-2);
@@ -386,7 +626,6 @@ function autoFormatDuration(value) {
     return `${Number(minutes)}:${seconds}`;
   }
 
-  // 14530 -> 1:45:30
   const hours = digits.slice(0, -4);
   const minutes = digits.slice(-4, -2);
   const seconds = digits.slice(-2);
@@ -445,6 +684,10 @@ function isValidLink(link) {
     link.startsWith("//")
   );
 }
+
+/* =========================
+   RENDER LIST
+========================= */
 
 function renderVideoList() {
   let videos = getVideos();
@@ -545,6 +788,10 @@ function renderVideoList() {
     videoList.appendChild(moreText);
   }
 }
+
+/* =========================
+   DURATION / EXPORT / DELETE
+========================= */
 
 function saveDuration(id) {
   const input = document.getElementById(`duration-${id}`);
