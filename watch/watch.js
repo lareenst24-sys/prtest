@@ -53,7 +53,7 @@ if (!watchContainer) {
               title="${escapeAttribute(currentVideo.title || "Video")}" 
               frameborder="0"
               sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-              allow="fullscreen; picture-in-picture; encrypted-media"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               referrerpolicy="no-referrer"
               allowfullscreen>
             </iframe>
@@ -109,6 +109,7 @@ if (!watchContainer) {
 
 function getRandomVideos(currentId, limit) {
   const availableVideos = videos.filter((video) => video.id !== currentId);
+
   const shuffledVideos = [...availableVideos];
 
   for (let i = shuffledVideos.length - 1; i > 0; i--) {
