@@ -13,21 +13,20 @@ const saveAllDurationsBtn = document.getElementById("saveAllDurationsBtn");
 const exportVideosBtn = document.getElementById("exportVideosBtn");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
-const openDownloadPopupBtn = document.getElementById("openDownloadPopupBtn");
-const closeDownloadPopupBtn = document.getElementById("closeDownloadPopupBtn");
-const downloadPopup = document.getElementById("downloadPopup");
-const downloadCodeInput = document.getElementById("downloadCodeInput");
-const scanDownloadVideosBtn = document.getElementById("scanDownloadVideosBtn");
-const selectAllDownloadBtn = document.getElementById("selectAllDownloadBtn");
-const clearDownloadSelectionBtn = document.getElementById("clearDownloadSelectionBtn");
-const downloadSelectedVideosBtn = document.getElementById("downloadSelectedVideosBtn");
-const downloadVideoList = document.getElementById("downloadVideoList");
-const downloadStatusText = document.getElementById("downloadStatusText");
+const openSavedDownloadPopupBtn = document.getElementById("openSavedDownloadPopupBtn");
+const closeSavedDownloadPopupBtn = document.getElementById("closeSavedDownloadPopupBtn");
+const savedDownloadPopup = document.getElementById("savedDownloadPopup");
+const refreshSavedDownloadListBtn = document.getElementById("refreshSavedDownloadListBtn");
+const selectAllSavedDownloadsBtn = document.getElementById("selectAllSavedDownloadsBtn");
+const clearSavedDownloadsBtn = document.getElementById("clearSavedDownloadsBtn");
+const downloadSelectedSavedVideosBtn = document.getElementById("downloadSelectedSavedVideosBtn");
+const savedDownloadVideoList = document.getElementById("savedDownloadVideoList");
+const savedDownloadStatusText = document.getElementById("savedDownloadStatusText");
 
 const MAX_UPLOAD_AT_ONCE = 100;
 
 let currentFilter = "all";
-let detectedDownloadVideos = [];
+let savedDownloadVideos = [];
 
 /* Auto-format duration while typing */
 document.addEventListener("input", (event) => {
@@ -37,6 +36,10 @@ document.addEventListener("input", (event) => {
 });
 
 renderVideoList();
+
+/* =========================
+   MAIN UPLOAD BUTTON
+========================= */
 
 if (addVideosBtn) {
   addVideosBtn.addEventListener("click", () => {
@@ -98,6 +101,10 @@ if (addVideosBtn) {
     alert(message);
   });
 }
+
+/* =========================
+   FILTER / EXPORT / DELETE
+========================= */
 
 if (showAllBtn) {
   showAllBtn.addEventListener("click", () => {
@@ -165,131 +172,173 @@ if (clearAllBtn) {
 }
 
 /* =========================
-   DOWNLOAD POPUP LOGIC
+   SAVED VIDEOS DOWNLOAD POPUP
 ========================= */
 
-if (openDownloadPopupBtn) {
-  openDownloadPopupBtn.addEventListener("click", () => {
-    openDownloadPopup();
+if (openSavedDownloadPopupBtn) {
+  openSavedDownloadPopupBtn.addEventListener("click", () => {
+    openSavedDownloadPopup();
   });
 }
 
-if (closeDownloadPopupBtn) {
-  closeDownloadPopupBtn.addEventListener("click", () => {
-    closeDownloadPopup();
+if (closeSavedDownloadPopupBtn) {
+  closeSavedDownloadPopupBtn.addEventListener("click", () => {
+    closeSavedDownloadPopup();
   });
 }
 
-if (downloadPopup) {
-  downloadPopup.addEventListener("click", (event) => {
-    if (event.target === downloadPopup) {
-      closeDownloadPopup();
+if (savedDownloadPopup) {
+  savedDownloadPopup.addEventListener("click", (event) => {
+    if (event.target === savedDownloadPopup) {
+      closeSavedDownloadPopup();
     }
   });
 }
 
-if (scanDownloadVideosBtn) {
-  scanDownloadVideosBtn.addEventListener("click", () => {
-    scanDownloadVideos();
+if (refreshSavedDownloadListBtn) {
+  refreshSavedDownloadListBtn.addEventListener("click", () => {
+    loadSavedDownloadVideos();
   });
 }
 
-if (selectAllDownloadBtn) {
-  selectAllDownloadBtn.addEventListener("click", () => {
-    const checkboxes = document.querySelectorAll(".download-video-checkbox");
+if (selectAllSavedDownloadsBtn) {
+  selectAllSavedDownloadsBtn.addEventListener("click", () => {
+    const checkboxes = document.querySelectorAll(".saved-download-checkbox:not(:disabled)");
+
     checkboxes.forEach((checkbox) => {
       checkbox.checked = true;
     });
   });
 }
 
-if (clearDownloadSelectionBtn) {
-  clearDownloadSelectionBtn.addEventListener("click", () => {
-    const checkboxes = document.querySelectorAll(".download-video-checkbox");
+if (clearSavedDownloadsBtn) {
+  clearSavedDownloadsBtn.addEventListener("click", () => {
+    const checkboxes = document.querySelectorAll(".saved-download-checkbox");
+
     checkboxes.forEach((checkbox) => {
       checkbox.checked = false;
     });
   });
 }
 
-if (downloadSelectedVideosBtn) {
-  downloadSelectedVideosBtn.addEventListener("click", () => {
-    downloadSelectedVideos();
+if (downloadSelectedSavedVideosBtn) {
+  downloadSelectedSavedVideosBtn.addEventListener("click", () => {
+    downloadSelectedSavedVideos();
   });
 }
 
-function openDownloadPopup() {
-  if (!downloadPopup) return;
+function openSavedDownloadPopup() {
+  if (!savedDownloadPopup) return;
 
-  downloadPopup.classList.add("active");
+  savedDownloadPopup.classList.add("active");
+  loadSavedDownloadVideos();
+}
 
-  if (downloadCodeInput && bulkEmbedInput && bulkEmbedInput.value.trim()) {
-    downloadCodeInput.value = bulkEmbedInput.value.trim();
+function closeSavedDownloadPopup() {
+  if (!savedDownloadPopup) return;
+
+  savedDownloadPopup.classList.remove("active");
+}
+
+function loadSavedDownloadVideos() {
+  const localVideos = getVideos();
+  const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
+
+  const combined = [...localVideos, ...publicVideos];
+
+  const cleaned = combined
+    .map((video, index) => {
+      return {
+        id: video.id || `saved-video-${index + 1}`,
+        title: cleanTitle(video.title) || "Video",
+        embed: isValidLink(video.embed) ? decodeText(video.embed) : "",
+        thumbnail: isValidLink(video.thumbnail) ? decodeText(video.thumbnail) : "",
+        duration: cleanDuration(video.duration)
+      };
+    })
+    .filter((video) => video.embed);
+
+  savedDownloadVideos = removeDuplicateSavedVideos(cleaned);
+
+  renderSavedDownloadVideos();
+
+  if (savedDownloadStatusText) {
+    const downloadableCount = savedDownloadVideos.filter((video) => isDirectVideoFile(video.embed)).length;
+    const iframeOnlyCount = savedDownloadVideos.length - downloadableCount;
+
+    savedDownloadStatusText.textContent = `${savedDownloadVideos.length} saved video(s) loaded • ${downloadableCount} downloadable • ${iframeOnlyCount} iframe only`;
   }
 }
 
-function closeDownloadPopup() {
-  if (!downloadPopup) return;
+function renderSavedDownloadVideos() {
+  if (!savedDownloadVideoList) return;
 
-  downloadPopup.classList.remove("active");
-}
-
-function scanDownloadVideos() {
-  const rawCode = downloadCodeInput ? downloadCodeInput.value.trim() : "";
-
-  if (!rawCode) {
-    alert("Paste code first.");
+  if (savedDownloadVideos.length === 0) {
+    savedDownloadVideoList.innerHTML = `
+      <p class="admin-help">No saved videos found. If you exported videos.js already, make sure adminprtest.html loads videos.js before admin.js.</p>
+    `;
     return;
   }
 
-  detectedDownloadVideos = extractDirectVideoLinks(rawCode);
+  savedDownloadVideoList.innerHTML = savedDownloadVideos.map((video, index) => {
+    const downloadable = isDirectVideoFile(video.embed);
+    const filename = makeVideoFilename(video.embed, index + 1);
+    const thumbHTML = video.thumbnail
+      ? `<img src="${escapeAttribute(video.thumbnail)}" alt="Thumbnail" onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');">`
+      : "";
 
-  renderDownloadVideos();
+    return `
+      <label class="saved-download-item ${downloadable ? "" : "not-downloadable"}">
+        <input 
+          type="checkbox" 
+          class="saved-download-checkbox" 
+          value="${escapeAttribute(video.embed)}"
+          data-filename="${escapeAttribute(filename)}"
+          ${downloadable ? "" : "disabled"}
+        >
 
-  if (downloadStatusText) {
-    downloadStatusText.textContent = `${detectedDownloadVideos.length} direct video file(s) found.`;
-  }
+        <div class="saved-download-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
+          ${thumbHTML}
+          ${video.duration ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>` : ""}
+        </div>
+
+        <div class="saved-download-info">
+          <strong>${escapeHTML(video.title || `Video ${index + 1}`)}</strong>
+          <span>${downloadable ? "Downloadable video file" : "Iframe embed only — cannot direct download"}</span>
+          <p>${escapeHTML(video.embed)}</p>
+        </div>
+      </label>
+    `;
+  }).join("");
 }
 
-function extractDirectVideoLinks(code) {
-  const cleanCode = String(code || "")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+function downloadSelectedSavedVideos() {
+  const selected = Array.from(document.querySelectorAll(".saved-download-checkbox:checked"));
 
-  const found = [];
-
-  const doc = new DOMParser().parseFromString(cleanCode, "text/html");
-
-  const videoSources = Array.from(doc.querySelectorAll("video[src], source[src], a[href]"));
-
-  videoSources.forEach((element) => {
-    const src = element.getAttribute("src") || element.getAttribute("href");
-
-    if (src && isDirectVideoFile(src)) {
-      found.push(decodeText(src.trim()));
-    }
-  });
-
-  const directVideoMatches = cleanCode.match(/https?:\/\/[^\s"'<>]+?\.(mp4|webm|mov|m4v|ogg)(\?[^\s"'<>]*)?/gi);
-
-  if (directVideoMatches) {
-    directVideoMatches.forEach((url) => {
-      if (isDirectVideoFile(url)) {
-        found.push(decodeText(url.trim()));
-      }
-    });
+  if (selected.length === 0) {
+    alert("Select at least one downloadable video.");
+    return;
   }
 
-  const unique = Array.from(new Set(found));
+  selected.forEach((checkbox, index) => {
+    const url = checkbox.value;
+    const filename = checkbox.dataset.filename || `video-${index + 1}.mp4`;
 
-  return unique.map((url, index) => {
-    return {
-      id: `download-video-${index + 1}`,
-      url,
-      filename: makeVideoFilename(url, index + 1)
-    };
+    setTimeout(() => {
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = filename;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, index * 450);
   });
+
+  alert(`${selected.length} download(s) started. If the browser blocks them, allow multiple downloads for this site.`);
 }
 
 function isDirectVideoFile(url) {
@@ -297,34 +346,13 @@ function isDirectVideoFile(url) {
 
   const clean = String(url).toLowerCase();
 
-  const allowed =
+  return (
     clean.includes(".mp4") ||
     clean.includes(".webm") ||
     clean.includes(".mov") ||
     clean.includes(".m4v") ||
-    clean.includes(".ogg");
-
-  if (!allowed) return false;
-
-  const blockedWords = [
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".webp",
-    ".gif",
-    "thumbnail",
-    "thumb",
-    "poster",
-    "image",
-    "logo",
-    "watermark",
-    "banner",
-    "ad",
-    "ads",
-    "script"
-  ];
-
-  return !blockedWords.some((word) => clean.includes(word));
+    clean.includes(".ogg")
+  );
 }
 
 function makeVideoFilename(url, index) {
@@ -351,70 +379,23 @@ function sanitizeFilename(name) {
     .slice(0, 120);
 }
 
-function renderDownloadVideos() {
-  if (!downloadVideoList) return;
+function removeDuplicateSavedVideos(videoList) {
+  const seen = new Set();
 
-  if (detectedDownloadVideos.length === 0) {
-    downloadVideoList.innerHTML = `
-      <p class="admin-help">
-        No direct downloadable video files found. Normal iframe embed links cannot be downloaded unless the code contains a direct .mp4/.webm/.mov file.
-      </p>
-    `;
-    return;
-  }
+  return videoList.filter((video) => {
+    const key = video.id || video.embed;
 
-  downloadVideoList.innerHTML = detectedDownloadVideos.map((video, index) => {
-    return `
-      <label class="download-video-item">
-        <input 
-          type="checkbox" 
-          class="download-video-checkbox" 
-          value="${escapeAttribute(video.url)}"
-          data-filename="${escapeAttribute(video.filename)}"
-          checked
-        >
+    if (!key || seen.has(key)) {
+      return false;
+    }
 
-        <div class="download-video-info">
-          <strong>Video ${index + 1}</strong>
-          <span>${escapeHTML(video.filename)}</span>
-          <p>${escapeHTML(video.url)}</p>
-        </div>
-      </label>
-    `;
-  }).join("");
-}
-
-function downloadSelectedVideos() {
-  const selected = Array.from(document.querySelectorAll(".download-video-checkbox:checked"));
-
-  if (selected.length === 0) {
-    alert("Select at least one video to download.");
-    return;
-  }
-
-  selected.forEach((checkbox, index) => {
-    const url = checkbox.value;
-    const filename = checkbox.dataset.filename || `video-${index + 1}.mp4`;
-
-    setTimeout(() => {
-      const a = document.createElement("a");
-
-      a.href = url;
-      a.download = filename;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }, index * 500);
+    seen.add(key);
+    return true;
   });
-
-  alert(`${selected.length} download(s) started. If your browser blocks some downloads, allow multiple downloads for this site.`);
 }
 
 /* =========================
-   UPLOAD PARSER
+   OLD WORKING UPLOAD PARSER
 ========================= */
 
 function splitEmbedBlocks(text) {
