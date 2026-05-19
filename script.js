@@ -23,16 +23,13 @@ savedVideos = savedVideos
   })
   .filter((video) => video.embed);
 
-// Do NOT overwrite localStorage with public videos.
-// localStorage stays private for admin/testing only.
-
 const isMobile = window.innerWidth <= 700;
 const videosPerLoad = isMobile ? 14 : 20;
 
 let currentIndex = 0;
 
 if (!videoGrid) {
-  console.error("videoGrid element not found. Make sure index.html has: <div id='videoGrid'>");
+  console.error("videoGrid element not found.");
 } else if (savedVideos.length === 0) {
   videoGrid.innerHTML = `<p class="empty-message">No videos added yet.</p>`;
 } else {
@@ -47,8 +44,9 @@ function loadVideos() {
   const nextVideos = savedVideos.slice(currentIndex, currentIndex + videosPerLoad);
 
   nextVideos.forEach((video) => {
-    const card = document.createElement("div");
+    const card = document.createElement("a");
     card.className = "video-card";
+    card.href = `watch/?id=${encodeURIComponent(video.id)}`;
     card.dataset.videoId = video.id;
 
     const thumbnailHTML = video.thumbnail
@@ -84,10 +82,6 @@ function loadVideos() {
       ${titleHTML}
     `;
 
-    card.addEventListener("click", () => {
-      window.location.href = `watch/?id=${encodeURIComponent(video.id)}`;
-    });
-
     videoGrid.appendChild(card);
   });
 
@@ -120,13 +114,11 @@ function createLoadMoreButton() {
 
   loadMoreWrapper.appendChild(loadMoreBtn);
 
-  // This places Load More above the ads.
   if (loadMoreSpot) {
     loadMoreSpot.appendChild(loadMoreWrapper);
     return;
   }
 
-  // Fallback if loadMoreSpot is missing from index.html
   const content = document.querySelector(".content");
   const firstAd = document.querySelector(".ad-slot");
 
@@ -144,7 +136,7 @@ function safeGetLocalVideos() {
 
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.warn("Local videos could not be read. Using empty localStorage list.", error);
+    console.warn("Local videos could not be read.", error);
     return [];
   }
 }
