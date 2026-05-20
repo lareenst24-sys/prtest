@@ -24,7 +24,7 @@ savedVideos = savedVideos
   .filter((video) => video.embed);
 
 const isMobile = window.innerWidth <= 700;
-const videosPerLoad = isMobile ? 14 : 20;
+const videosPerLoad = isMobile ? 15 : 30;
 
 let currentIndex = 0;
 
@@ -43,7 +43,9 @@ if (!videoGrid) {
 function loadVideos() {
   const nextVideos = savedVideos.slice(currentIndex, currentIndex + videosPerLoad);
 
-  nextVideos.forEach((video) => {
+  nextVideos.forEach((video, index) => {
+    const absoluteIndex = currentIndex + index + 1;
+
     const card = document.createElement("a");
     card.className = "video-card";
     card.href = `watch/?id=${encodeURIComponent(video.id)}`;
@@ -83,6 +85,22 @@ function loadVideos() {
     `;
 
     videoGrid.appendChild(card);
+
+    // ADD BANNER EVERY 15 VIDEOS (3 ROWS)
+    if (absoluteIndex % 15 === 0) {
+      const adWrap = document.createElement("div");
+      adWrap.className = "inline-banner-ad";
+
+      adWrap.innerHTML = `
+        <script async type="application/javascript" src="https://a.magsrv.com/ad-provider.js"><\/script>
+        <ins class="eas6a97888e2" data-zoneid="5930010"></ins>
+        <script>
+          (AdProvider = window.AdProvider || []).push({"serve": {}});
+        <\/script>
+      `;
+
+      videoGrid.appendChild(adWrap);
+    }
   });
 
   currentIndex += videosPerLoad;
