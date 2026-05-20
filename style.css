@@ -1341,25 +1341,15 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
   width: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
-  margin: 20px 0 30px;
-  overflow: hidden;
+  margin: 26px 0 34px;
 }
 
-.extra-bottom-banner {
+.inline-banner-inner {
   width: 100%;
+  max-width: 1200px;
+  min-height: 120px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 28px auto;
-  overflow: hidden;
-}
-.inline-banner-ad {
-  grid-column: 1 / -1;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 22px 0 34px;
   overflow: hidden;
 }
