@@ -1354,3 +1354,12 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
   margin: 28px auto;
   overflow: hidden;
 }
+.inline-banner-ad {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 22px 0 34px;
+  overflow: hidden;
+}
