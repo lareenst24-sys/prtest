@@ -1,37 +1,45 @@
 const videoGrid = document.getElementById("videoGrid");
 
-// Public videos from videos.js
-const publicVideos = Array.isArray(window.siteVideos) ? window.siteVideos : [];
+// PUBLIC VIDEOS
+const publicVideos = Array.isArray(window.siteVideos)
+  ? window.siteVideos
+  : [];
 
-// Private/test videos from admin localStorage
+// LOCAL VIDEOS
 const localVideos = safeGetLocalVideos();
 
-// Combine both lists
+// COMBINE
 let savedVideos = [...localVideos, ...publicVideos];
 
-// Clean saved videos before rendering
+// CLEAN VIDEOS
 savedVideos = savedVideos
-  .map((video, index) => {
-    return {
-      ...video,
-      id: video.id || `video-${index + 1}`,
-      title: cleanTitle(video.title),
-      thumbnail: isValidLink(video.thumbnail) ? decodeUrl(video.thumbnail) : "",
-      embed: isValidLink(video.embed) ? decodeUrl(video.embed) : "",
-      duration: cleanDuration(video.duration)
-    };
-  })
-  .filter((video) => video.embed);
+  .map((video, index) => ({
+    ...video,
+    id: video.id || `video-${index + 1}`,
+    title: cleanTitle(video.title),
+    thumbnail: isValidLink(video.thumbnail)
+      ? decodeUrl(video.thumbnail)
+      : "",
+    embed: isValidLink(video.embed)
+      ? decodeUrl(video.embed)
+      : "",
+    duration: cleanDuration(video.duration)
+  }))
+  .filter(video => video.embed);
 
 const isMobile = window.innerWidth <= 700;
+
+// DESKTOP = 30
+// MOBILE = 15
 const videosPerLoad = isMobile ? 15 : 30;
 
 let currentIndex = 0;
 
 if (!videoGrid) {
-  console.error("videoGrid element not found.");
+  console.error("videoGrid not found");
 } else if (savedVideos.length === 0) {
-  videoGrid.innerHTML = `<p class="empty-message">No videos added yet.</p>`;
+  videoGrid.innerHTML =
+    `<p class="empty-message">No videos added yet.</p>`;
 } else {
   loadVideos();
 
@@ -40,43 +48,56 @@ if (!videoGrid) {
   }
 }
 
+// LOAD VIDEOS
 function loadVideos() {
-  const nextVideos = savedVideos.slice(currentIndex, currentIndex + videosPerLoad);
+
+  const nextVideos = savedVideos.slice(
+    currentIndex,
+    currentIndex + videosPerLoad
+  );
 
   nextVideos.forEach((video, index) => {
+
     const absoluteIndex = currentIndex + index + 1;
 
+    // VIDEO CARD
     const card = document.createElement("a");
+
     card.className = "video-card";
     card.href = `watch/?id=${encodeURIComponent(video.id)}`;
-    card.dataset.videoId = video.id;
 
     const thumbnailHTML = video.thumbnail
       ? `
-        <img 
-          src="${escapeAttribute(video.thumbnail)}" 
-          alt="${escapeAttribute(video.title || "Video thumbnail")}" 
+        <img
+          src="${escapeAttribute(video.thumbnail)}"
+          alt="${escapeAttribute(video.title || "Video")}"
           class="thumbnail-img"
           loading="lazy"
-          onerror="this.style.display='none'; this.parentElement.classList.add('thumbnail-failed');"
+          onerror="this.style.display='none'"
         >
       `
       : "";
 
     const durationHTML = video.duration
-      ? `<span class="duration-badge">${escapeHTML(video.duration)}</span>`
+      ? `
+        <span class="duration-badge">
+          ${escapeHTML(video.duration)}
+        </span>
+      `
       : "";
 
     const titleHTML = video.title
       ? `
         <div class="video-meta">
-          <h3 class="video-title">${escapeHTML(video.title)}</h3>
+          <h3 class="video-title">
+            ${escapeHTML(video.title)}
+          </h3>
         </div>
       `
       : "";
 
     card.innerHTML = `
-      <div class="video-thumb ${video.thumbnail ? "" : "thumbnail-failed"}">
+      <div class="video-thumb">
         ${thumbnailHTML}
         ${durationHTML}
       </div>
@@ -86,80 +107,112 @@ function loadVideos() {
 
     videoGrid.appendChild(card);
 
-    // ADD AD EVERY 15 VIDEOS (3 ROWS)
+    // INLINE AD EVERY 15 VIDEOS
     if (absoluteIndex % 15 === 0) {
+
       const adWrap = document.createElement("div");
       adWrap.className = "inline-banner-ad";
 
-      adWrap.innerHTML = `
-        <script async type="application/javascript" src="https://a.pemsrv.com/ad-provider.js"><\/script>
-        <ins class="eas6a97888e35" data-zoneid="5930002"></ins>
-        <script>
-          (AdProvider = window.AdProvider || []).push({"serve": {}});
-        <\/script>
-      `;
+      // AD BOX
+      const ins = document.createElement("ins");
+      ins.className = "eas6a97888e35";
+      ins.setAttribute("data-zoneid", "5930002");
+
+      adWrap.appendChild(ins);
 
       videoGrid.appendChild(adWrap);
+
+      // LOAD SCRIPT
+      const adScript = document.createElement("script");
+
+      adScript.async = true;
+      adScript.type = "application/javascript";
+      adScript.src =
+        "https://a.pemsrv.com/ad-provider.js";
+
+      document.body.appendChild(adScript);
+
+      // START AD
+      adScript.onload = () => {
+
+        window.AdProvider =
+          window.AdProvider || [];
+
+        window.AdProvider.push({
+          serve: {}
+        });
+
+      };
+
     }
+
   });
 
   currentIndex += videosPerLoad;
 }
 
+// LOAD MORE BUTTON
 function createLoadMoreButton() {
-  const existingButton = document.querySelector(".load-more-wrapper");
 
-  if (existingButton) {
-    existingButton.remove();
+  const existing =
+    document.querySelector(".load-more-wrapper");
+
+  if (existing) {
+    existing.remove();
   }
 
-  const loadMoreSpot = document.getElementById("loadMoreSpot");
+  const loadMoreSpot =
+    document.getElementById("loadMoreSpot");
 
-  const loadMoreWrapper = document.createElement("div");
-  loadMoreWrapper.className = "load-more-wrapper";
+  const wrapper = document.createElement("div");
+  wrapper.className = "load-more-wrapper";
 
-  const loadMoreBtn = document.createElement("button");
-  loadMoreBtn.textContent = "Load More";
-  loadMoreBtn.className = "load-more-btn";
+  const btn = document.createElement("button");
 
-  loadMoreBtn.addEventListener("click", () => {
+  btn.className = "load-more-btn";
+  btn.textContent = "Load More";
+
+  btn.addEventListener("click", () => {
+
     loadVideos();
 
     if (currentIndex >= savedVideos.length) {
-      loadMoreWrapper.remove();
+      wrapper.remove();
     }
+
   });
 
-  loadMoreWrapper.appendChild(loadMoreBtn);
+  wrapper.appendChild(btn);
 
   if (loadMoreSpot) {
-    loadMoreSpot.appendChild(loadMoreWrapper);
-    return;
-  }
-
-  const content = document.querySelector(".content");
-  const firstAd = document.querySelector(".ad-slot");
-
-  if (content && firstAd) {
-    content.insertBefore(loadMoreWrapper, firstAd);
-  } else if (content) {
-    content.appendChild(loadMoreWrapper);
+    loadMoreSpot.appendChild(wrapper);
   }
 }
 
+// LOCAL STORAGE
 function safeGetLocalVideos() {
+
   try {
+
     const raw = localStorage.getItem("videos");
+
     const parsed = JSON.parse(raw);
 
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.warn("Local videos could not be read.", error);
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+
+  } catch {
+
     return [];
+
   }
+
 }
 
+// CLEAN TITLE
 function cleanTitle(title) {
+
   if (!title) return "";
 
   let clean = String(title).trim();
@@ -174,30 +227,20 @@ function cleanTitle(title) {
 
   if (!clean) return "";
 
-  const lower = clean.toLowerCase();
-
-  if (
-    lower === "untitled video" ||
-    lower.startsWith("untitled video ") ||
-    /^video\s*\d+$/i.test(clean)
-  ) {
-    return "";
-  }
-
-  if (isValidLink(clean)) return "";
-
   if (
     clean.includes("<iframe") ||
-    clean.includes("</iframe>") ||
-    clean.includes("src=")
+    clean.includes("</iframe>")
   ) {
     return "";
   }
 
   return clean;
+
 }
 
+// CLEAN DURATION
 function cleanDuration(duration) {
+
   if (!duration) return "";
 
   const clean = String(duration).trim();
@@ -207,9 +250,12 @@ function cleanDuration(duration) {
   }
 
   return "";
+
 }
 
+// DECODE URL
 function decodeUrl(url) {
+
   if (!url) return "";
 
   let clean = String(url)
@@ -222,9 +268,12 @@ function decodeUrl(url) {
   }
 
   return clean;
+
 }
 
+// VALID LINK
 function isValidLink(link) {
+
   return (
     typeof link === "string" &&
     (
@@ -233,18 +282,27 @@ function isValidLink(link) {
       link.startsWith("//")
     )
   );
+
 }
 
+// ESCAPE HTML
 function escapeHTML(text) {
+
   const div = document.createElement("div");
+
   div.textContent = text || "";
+
   return div.innerHTML;
+
 }
 
+// ESCAPE ATTRIBUTE
 function escapeAttribute(text) {
+
   return String(text || "")
     .replaceAll("&", "&amp;")
     .replaceAll('"', "&quot;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
+
 }
