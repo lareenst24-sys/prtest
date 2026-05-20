@@ -29,23 +29,28 @@ savedVideos = savedVideos
 
 const isMobile = window.innerWidth <= 700;
 
-// DESKTOP = 30
-// MOBILE = 15
+// 5 ROW LAYOUT
 const videosPerLoad = isMobile ? 15 : 30;
 
 let currentIndex = 0;
 
 if (!videoGrid) {
+
   console.error("videoGrid not found");
+
 } else if (savedVideos.length === 0) {
+
   videoGrid.innerHTML =
     `<p class="empty-message">No videos added yet.</p>`;
+
 } else {
+
   loadVideos();
 
   if (savedVideos.length > videosPerLoad) {
     createLoadMoreButton();
   }
+
 }
 
 // LOAD VIDEOS
@@ -58,14 +63,18 @@ function loadVideos() {
 
   nextVideos.forEach((video, index) => {
 
-    const absoluteIndex = currentIndex + index + 1;
+    const absoluteIndex =
+      currentIndex + index + 1;
 
     // VIDEO CARD
     const card = document.createElement("a");
 
     card.className = "video-card";
-    card.href = `watch/?id=${encodeURIComponent(video.id)}`;
 
+    card.href =
+      `watch/?id=${encodeURIComponent(video.id)}`;
+
+    // THUMBNAIL
     const thumbnailHTML = video.thumbnail
       ? `
         <img
@@ -78,6 +87,7 @@ function loadVideos() {
       `
       : "";
 
+    // DURATION
     const durationHTML = video.duration
       ? `
         <span class="duration-badge">
@@ -86,6 +96,7 @@ function loadVideos() {
       `
       : "";
 
+    // TITLE
     const titleHTML = video.title
       ? `
         <div class="video-meta">
@@ -110,25 +121,48 @@ function loadVideos() {
     // INLINE AD EVERY 15 VIDEOS
     if (absoluteIndex % 15 === 0) {
 
+      // FULL WIDTH WRAPPER
       const adWrap = document.createElement("div");
-      adWrap.className = "inline-banner-ad";
 
-      // AD BOX
-      const ins = document.createElement("ins");
-      ins.className = "eas6a97888e35";
-      ins.setAttribute("data-zoneid", "5930002");
+      adWrap.className =
+        "inline-banner-ad";
 
-      adWrap.appendChild(ins);
+      // INNER CONTAINER
+      const adInner =
+        document.createElement("div");
+
+      adInner.className =
+        "inline-banner-inner";
+
+      // AD ELEMENT
+      const ins =
+        document.createElement("ins");
+
+      ins.className =
+        "eas6a97888e35";
+
+      ins.setAttribute(
+        "data-zoneid",
+        "5930002"
+      );
+
+      adInner.appendChild(ins);
+
+      adWrap.appendChild(adInner);
 
       videoGrid.appendChild(adWrap);
 
       // LOAD SCRIPT
-      const adScript = document.createElement("script");
+      const adScript =
+        document.createElement("script");
 
-      adScript.async = true;
-      adScript.type = "application/javascript";
       adScript.src =
         "https://a.pemsrv.com/ad-provider.js";
+
+      adScript.async = true;
+
+      adScript.type =
+        "application/javascript";
 
       document.body.appendChild(adScript);
 
@@ -149,44 +183,63 @@ function loadVideos() {
   });
 
   currentIndex += videosPerLoad;
+
 }
 
 // LOAD MORE BUTTON
 function createLoadMoreButton() {
 
   const existing =
-    document.querySelector(".load-more-wrapper");
+    document.querySelector(
+      ".load-more-wrapper"
+    );
 
   if (existing) {
     existing.remove();
   }
 
   const loadMoreSpot =
-    document.getElementById("loadMoreSpot");
+    document.getElementById(
+      "loadMoreSpot"
+    );
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "load-more-wrapper";
+  const wrapper =
+    document.createElement("div");
 
-  const btn = document.createElement("button");
+  wrapper.className =
+    "load-more-wrapper";
 
-  btn.className = "load-more-btn";
-  btn.textContent = "Load More";
+  const btn =
+    document.createElement("button");
 
-  btn.addEventListener("click", () => {
+  btn.className =
+    "load-more-btn";
 
-    loadVideos();
+  btn.textContent =
+    "Load More";
 
-    if (currentIndex >= savedVideos.length) {
-      wrapper.remove();
+  btn.addEventListener(
+    "click",
+    () => {
+
+      loadVideos();
+
+      if (
+        currentIndex >=
+        savedVideos.length
+      ) {
+        wrapper.remove();
+      }
+
     }
-
-  });
+  );
 
   wrapper.appendChild(btn);
 
   if (loadMoreSpot) {
     loadMoreSpot.appendChild(wrapper);
   }
+
 }
 
 // LOCAL STORAGE
@@ -194,9 +247,13 @@ function safeGetLocalVideos() {
 
   try {
 
-    const raw = localStorage.getItem("videos");
+    const raw =
+      localStorage.getItem(
+        "videos"
+      );
 
-    const parsed = JSON.parse(raw);
+    const parsed =
+      JSON.parse(raw);
 
     return Array.isArray(parsed)
       ? parsed
@@ -215,7 +272,8 @@ function cleanTitle(title) {
 
   if (!title) return "";
 
-  let clean = String(title).trim();
+  let clean =
+    String(title).trim();
 
   clean = clean
     .replace(/\s+/g, " ")
@@ -243,9 +301,12 @@ function cleanDuration(duration) {
 
   if (!duration) return "";
 
-  const clean = String(duration).trim();
+  const clean =
+    String(duration).trim();
 
-  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)) {
+  if (
+    /^\d{1,2}:\d{2}(:\d{2})?$/.test(clean)
+  ) {
     return clean;
   }
 
@@ -263,7 +324,9 @@ function decodeUrl(url) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
 
-  if (clean.startsWith("//")) {
+  if (
+    clean.startsWith("//")
+  ) {
     clean = "https:" + clean;
   }
 
@@ -288,9 +351,11 @@ function isValidLink(link) {
 // ESCAPE HTML
 function escapeHTML(text) {
 
-  const div = document.createElement("div");
+  const div =
+    document.createElement("div");
 
-  div.textContent = text || "";
+  div.textContent =
+    text || "";
 
   return div.innerHTML;
 
