@@ -1336,3 +1336,21 @@ main#videos.content > div#videoGrid.video-grid > .video-card .video-thumb {
     width: 100%;
   }
 }
+.inline-banner-ad {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0 30px;
+  overflow: hidden;
+}
+
+.extra-bottom-banner {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 28px auto;
+  overflow: hidden;
+}
