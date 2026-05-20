@@ -86,14 +86,14 @@ function loadVideos() {
 
     videoGrid.appendChild(card);
 
-    // ADD BANNER EVERY 15 VIDEOS (3 ROWS)
+    // ADD AD EVERY 15 VIDEOS (3 ROWS)
     if (absoluteIndex % 15 === 0) {
       const adWrap = document.createElement("div");
       adWrap.className = "inline-banner-ad";
 
       adWrap.innerHTML = `
-        <script async type="application/javascript" src="https://a.magsrv.com/ad-provider.js"><\/script>
-        <ins class="eas6a97888e2" data-zoneid="5930010"></ins>
+        <script async type="application/javascript" src="https://a.pemsrv.com/ad-provider.js"><\/script>
+        <ins class="eas6a97888e35" data-zoneid="5930002"></ins>
         <script>
           (AdProvider = window.AdProvider || []).push({"serve": {}});
         <\/script>
